@@ -146,7 +146,6 @@ class TelaLogin extends React.Component {
       });
     });
     this.setState({dataTable: listaDePedidos});
-    return listaDePedidos;
   };
 
   insereCodigoPedido = async (id, codigo) => {
@@ -156,6 +155,7 @@ class TelaLogin extends React.Component {
       .update({codigoPedido: codigo})
       .then(() => {
         window.M.toast({html:"Sucesso", inDuration:600, outDuration: 600, displayLength: 1600});
+       this.consulta();
       }).catch((error) => {
         console.error("Erro ao escrever no documento",error);
     });
