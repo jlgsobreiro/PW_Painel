@@ -258,7 +258,7 @@ class TelaLogin extends React.Component {
               header="Produtos"
               node="div"
               >
-                <Table style={{fontsize:6}} striped={true} hoverable={true}>
+                <Table style={{fontsize:6}} striped={true} hoverable={true} >
                   <thead>
                   {this.make_row([
                     this.make_col_title("Codigo"),
@@ -271,13 +271,25 @@ class TelaLogin extends React.Component {
                   <tbody>
                   {produtos[item]}
                   {this.make_row(this.make_col_title("Total : R$"+total))}
-                  <TextInput
-                    onChange={(value) => {
-                    this.setState({teste:value});
-                    window.M.toast(value, 300);
-                  }}/>
-                  <Button>E</Button>>
                   </tbody>
+                  <div className="row" style={{width:"150%", flexDirection:"row"}}>
+                    <TextInput
+                      placeHolder="Codigo"
+                      style={{width:"100%"}}
+                      onChange={(value) => {
+                      this.setState({teste:value});
+                      console.log(pedidos[item].data)
+                    }}/>
+                    <Button
+                      style={{marginRight:"4%"}}
+                      onClick={() => {
+
+                      }}
+                    >
+                      <Icon children="done"/>
+                    </Button>
+                    <Button><Icon children="delete"/></Button>
+                  </div>
                 </Table>
               </CollapsibleItem>
             </Collapsible>
