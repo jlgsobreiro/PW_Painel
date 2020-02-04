@@ -28,7 +28,8 @@ class TelaLogin extends React.Component {
     mouseOutStyle: {marginLeft:"10%",width:"80%", height: 32},
     buttonStyle: {},
     currentWindow: "Painel",
-    dataTable: {}
+    dataTable: {},
+    text:""
   };
 
   componentDidMount() {
@@ -146,7 +147,19 @@ class TelaLogin extends React.Component {
     });
     this.setState({dataTable: listaDePedidos});
     return listaDePedidos;
-  }
+  };
+
+  insereCodigoPedido = async (id, codigo) => {
+    const db = await this.state.firebaseapp.firestore();
+    db.collection("teste")
+      .doc(id)
+      .update({codigoPedido: codigo})
+      .then(() => {
+        window.M.toast({html:"Sucesso", inDuration:600, outDuration: 600, displayLength: 1600});
+      }).catch((error) => {
+        console.error("Erro ao escrever no documento",error);
+    });
+  };
 
   LoginModal(){
     return (
@@ -227,17 +240,20 @@ class TelaLogin extends React.Component {
     let titles = ["Representante","Cliente","Prazo","Entrega","Entrada","Obs"];
     let pedidos = this.state.dataTable;
 
+
     let body = [];
     let produtos = [];
     let total = 0.0;
     for(let item in pedidos){
-      let temp = [];
-        for(let produto of pedidos[item].data.produtos){
+      console.log(pedidos[item].data.codigoPedido === undefined);
+      if (pedidos[item].data.codigoPedido === undefined) {
+        let temp = [];
+        for (let produto of pedidos[item].data.produtos) {
           temp.push(
             this.make_row([
               this.make_col(produto.codigo),
               this.make_col(produto.quantidade),
-              this.make_col((produto.total/produto.quantidade).toFixed(2)),
+              this.make_col((produto.total / produto.quantidade).toFixed(2)),
               this.make_col(produto.total),
               this.make_col(<Checkbox checked={produto.bonificacao} disabled={true} filledIn={true}/>),
             ])
@@ -245,58 +261,60 @@ class TelaLogin extends React.Component {
           total += !produto.bonificacao ? produto.total : 0;
         }
         produtos.push(temp);
-      body.push(
-        this.make_row(
-          [this.make_col(pedidos[item].data.representante),
-          this.make_col(pedidos[item].data.cliente),
-          this.make_col(this.checaPrazo(pedidos[item].data.prazo)),
-          this.make_col(new Date(pedidos[item].data.dataEntrega).toLocaleDateString("pt-br")),
-          this.make_col((pedidos[item].data.data.data+"-"+pedidos[item].data.data.mes+"-"+pedidos[item].data.data.ano)),
-          this.make_col(pedidos[item].data.obs),
-            <Collapsible>
-              <CollapsibleItem
-              header="Produtos"
-              node="div"
-              >
-                <Table style={{fontsize:6}} striped={true} hoverable={true} >
-                  <thead>
-                  {this.make_row([
-                    this.make_col_title("Codigo"),
-                    this.make_col_title("Quantidade"),
-                    this.make_col_title("Unitario"),
-                    this.make_col_title("Total"),
-                    this.make_col_title("Bonificacao"),
-                  ])}
-                  </thead>
-                  <tbody>
-                  {produtos[item]}
-                  {this.make_row(this.make_col_title("Total : R$"+total))}
-                  </tbody>
-                  <div className="row" style={{width:"150%", flexDirection:"row"}}>
-                    <TextInput
-                      placeHolder="Codigo"
-                      style={{width:"100%"}}
-                      onChange={(value) => {
-                      this.setState({teste:value});
-                      console.log(pedidos[item].data)
-                    }}/>
-                    <Button
-                      style={{marginRight:"4%"}}
-                      onClick={() => {
-
-                      }}
-                    >
-                      <Icon children="done"/>
-                    </Button>
-                    <Button><Icon children="delete"/></Button>
-                  </div>
-                </Table>
-              </CollapsibleItem>
-            </Collapsible>
+        body.push(
+          this.make_row(
+            [this.make_col(pedidos[item].data.representante),
+              this.make_col(pedidos[item].data.cliente),
+              this.make_col(this.checaPrazo(pedidos[item].data.prazo)),
+              this.make_col(new Date(pedidos[item].data.dataEntrega).toLocaleDateString("pt-br")),
+              this.make_col((pedidos[item].data.data.data + "-" + pedidos[item].data.data.mes + "-" + pedidos[item].data.data.ano)),
+              this.make_col(pedidos[item].data.obs),
+              <Collapsible>
+                <CollapsibleItem
+                  header="Produtos"
+                  node="div"
+                >
+                  <Table style={{fontsize: 6}} striped={true} hoverable={true}>
+                    <thead>
+                    {this.make_row([
+                      this.make_col_title("Codigo"),
+                      this.make_col_title("Quantidade"),
+                      this.make_col_title("Unitario"),
+                      this.make_col_title("Total"),
+                      this.make_col_title("Bonificacao"),
+                    ])}
+                    </thead>
+                    <tbody>
+                    {produtos[item]}
+                    {this.make_row(this.make_col_title("Total : R$" + total))}
+                    </tbody>
+                    <div className="row" style={{width: "150%", flexDirection: "row"}}>
+                      <TextInput
+                        placeHolder="Codigo"
+                        style={{width: "100%"}}
+                        onChange={(text) => {
+                          this.setState({text: text.target.value});
+                          console.log(text.target.value)
+                        }}/>
+                      <Button
+                        style={{marginRight: "4%"}}
+                        onClick={() => {
+                          this.insereCodigoPedido(pedidos[item].id, this.state.text);
+                          console.log(pedidos[item].id)
+                        }}
+                      >
+                        <Icon children="done"/>
+                      </Button>
+                      <Button><Icon children="delete"/></Button>
+                    </div>
+                  </Table>
+                </CollapsibleItem>
+              </Collapsible>
             ]
-        )
-      );
-      total = 0.0;
+          )
+        );
+        total = 0.0;
+      }
     }
     let head = [];
     head.push(

@@ -21,9 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-/src/prowater-177d3-firebase-adminsdk-o3503-ea9f50ea76.json
 /sqlanywhere/.idea/
-/.idea/
 /.idea/
 /.gitignore
 /.idea/codeStyles/codeStyleConfig.xml
