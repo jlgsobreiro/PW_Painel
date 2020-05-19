@@ -14,26 +14,34 @@ import * as firebase from 'firebase';
 import Chart from "react-google-charts";
 
 class TelaLogin extends React.Component {
-  state = {
-    usuario: "jlgsobreiro@gmail.com",
-    senha: "zaion6491",
-    response: '',
-    firebaseapp: firebase.initializeApp({
-      apiKey: 'AIzaSyDGcf4b5BG9NNV__GQbzTdZ7QJAcOeMyRA',
-      authDomain: 'https://accounts.google.com/o/oauth2/auth',
-      projectId: 'prowater-177d3'
-    }),
-    logged:false,
-    mouseOverStyle: {marginLeft:"10%", borderRadius:"21px",width:"80%", height: 42, backgroundColor:"white"},
-    mouseOutStyle: {marginLeft:"10%",width:"80%", height: 32},
-    buttonStyle: {},
-    currentWindow: "Painel",
-    dataTable: {},
-    text:""
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      usuario: "",
+      senha: "",
+      response: '',
+      firebaseapp: firebase.initializeApp({
+        apiKey: 'AIzaSyDGcf4b5BG9NNV__GQbzTdZ7QJAcOeMyRA',
+        authDomain: 'https://accounts.google.com/o/oauth2/auth',
+        projectId: 'prowater-177d3'
+      }),
+      logged:false,
+      mouseOverStyle: {marginLeft:"10%", borderRadius:"21px",width:"80%", height: 42, backgroundColor:"white"},
+      mouseOutStyle: {marginLeft:"10%",width:"80%", height: 32},
+      buttonStyle: {},
+      currentWindow: "Painel",
+      dataTable: {},
+      text:"",
+      dataCobranca: [],
+      dataProducao: [],
+    };
+    this.handleChangeUser = this.handleChangeUser.bind(this);
+    this.handleChangePassword = this.handleChangePassword.bind(this);
+  }
 
   componentDidMount() {
     this.state.firebaseapp.auth().onAuthStateChanged( user => {
+      console.log(user);
       if (user){
         this.setState({logged: true});
         this.consulta();
@@ -41,23 +49,31 @@ class TelaLogin extends React.Component {
     })
   }
 
-  autenticaUsuario = async () => {
+  handleChangeUser (event) {
+    this.setState({usuario: event.target.value});
+  }
+
+  handleChangePassword (event) {
+    this.setState({senha: event.target.value});
+  }
+
+  autenticaUsuario = async (usuario, senha, status) => {
     this.state.firebaseapp
       .auth()
-      .signInWithEmailAndPassword(this.state.usuario,this.state.senha)
+      .signInWithEmailAndPassword(usuario,senha)
       .then(
         r => {
           window.M.toast({html:"Sucesso", inDuration:600, outDuration: 600, displayLength: 1600});
-          return true;
+          status = true;
         },
         r => {
           window.M.toast({html:"Email ou senha incorretos", inDuration:600, outDuration: 600, displayLength: 1600});
-          return false;
+          status = false;
         }
       )
       .catch(function(error) {
         window.M.toast({html:error, inDuration:600, outDuration: 600, displayLength: 1600});
-        return false;
+        status = false;
       });
   };
 
@@ -97,11 +113,32 @@ class TelaLogin extends React.Component {
     }
   };
 
-  callApiCobrancas = async () => {
+  callApiTabelaRepresentantes = async () => {
+    const response = await fetch('http://127.0.0.1:5000/representantes');
+    const body = await response.json();
+    if (response.status !== 200) throw Error(body.message);
+    window.M.toast({html:"Tabela", inDuration:600, outDuration: 600, displayLength: 1600});
+    const db = this.state.firebaseapp.firestore();
+    for ( var representante in body) {
+      console.log(representante)
+      db.collection("representantes").add(body[representante])
+        .then(function (docRef) {
+          console.log("Document written with ID: ", docRef.id);
+        })
+        .catch(function (error) {
+          console.error("Error adding document: ", error);
+        });
+    }
+  };
+
+  carregaCobrancas = async () => {
     const response = await fetch('http://127.0.0.1:5000/cobrancas');
     const body = await response.json();
     if (response.status !== 200) throw Error(body.message);
     window.M.toast({html:"Cobrancas", inDuration:600, outDuration: 600, displayLength: 1600});
+  };
+
+  addCobrancasFirebase = async (body) => {
     const db = this.state.firebaseapp.firestore();
     for ( var cobranca in body) {
       db.collection("cobrancas")
@@ -113,6 +150,23 @@ class TelaLogin extends React.Component {
           console.error("Error adding document: ", error);
         });
     }
+  };
+
+  updateCobrancasFirebase = async (id, body) => {
+    const db = this.state.firebaseapp.firestore();
+    await db.collection("cobrancas")
+      .where("cliente", "==", id.cliente)
+      .where("pedido", "==", id.pedido)
+      .where( "nota_fiscal", "==", id.nota_fiscal)
+      .where( "empresa", "==", id.empresa)
+      .where( "parcela", "==", id.parcela)
+      .update(body)
+      .then(function (docRef) {
+        console.log("Document: ", docRef.id, " updated");
+      })
+      .catch(function (error) {
+        console.error("Error updating document: ", error);
+      });
   };
 
   checaPrazo(prazo){
@@ -128,13 +182,24 @@ class TelaLogin extends React.Component {
 
   }
 
-  logOut (){
-    this.state.firebaseapp.auth().signOut();
-    this.setState({logged:false})
+  logOut = async () => {
+    await this.state.firebaseapp.auth().signOut().then(r => {
+      this.setState({logged:false})
+    });
   }
 
   mostraTabelaPedido = () => {
     this.setState({currentWindow: "Pedidos"})
+  };
+
+  mostraTabelaCobranca = () => {
+    this.setState({currentWindow: "Cobrancas"});
+    this.consultaListaDeCobranca();
+  };
+
+  mostraTabelaProducao = () => {
+    this.setState({currentWindow: "Producao"});
+    this.consultaListaDeProducao();
   };
 
   consulta = async () =>{
@@ -146,6 +211,24 @@ class TelaLogin extends React.Component {
       });
     });
     this.setState({dataTable: listaDePedidos});
+  };
+
+  consultaListaDeCobranca = async () => {
+    let listaDeClientes = [];
+    const db = await this.state.firebaseapp.firestore();
+    await db
+      .collection("cobrancas")
+      .get()
+      .then(querySnapShot => {
+        querySnapShot.forEach(doc => {
+          listaDeClientes.push({ id: doc.id, data: doc.data() });
+        });
+        //console.log("Lista Cob", listaDeClientes);
+      })
+      .catch(error => {
+        console.log("Deu ruim", error);
+      });
+    this.setState({dataCobranca: listaDeClientes}) ;
   };
 
   insereCodigoPedido = async (id, codigo) => {
@@ -174,18 +257,22 @@ class TelaLogin extends React.Component {
         <div className="col s6">
           <div className="row">
             <div className="input-field col s12">
-              <input id="Email" type="email" className="validate"/>
+              <input id="Email" type="email" className="validate" value={this.state.usuario} onChange={this.handleChangeUser}/>
               <label htmlFor="Email">Email</label>
             </div>
             <div className="input-field col s12">
-              <input id="Password" type="text" className="validate"/>
+              <input id="Password" type="text" className="validate" value={this.state.senha} onChange={this.handleChangePassword}/>
               <label htmlFor="Password">Senha</label>
             </div>
             <div className="input-field col s12 m12 l12">
               <Button
                 style={{width:"100%"}} type="submit"
                 className="waves-effect waves-light btn"
-                onClick={() => {this.setState({logged: this.autenticaUsuario()});
+                onClick={() => {
+                  let logged = false;
+                  this.autenticaUsuario(this.state.usuario, this.state.senha,logged);
+                  this.setState({logged: logged}
+                  );
                 }}
               >
                 Login
@@ -235,12 +322,22 @@ class TelaLogin extends React.Component {
   make_col_title (item){
     return (<th>{item}</th>)
   }
+  make_table (head,body){
+    return (
+      <Table striped={true} hoverable={true} >
+        <thead>
+          {head}
+        </thead>
+        <tbody>
+          {body}
+        </tbody>
+      </Table>
+    );
+  }
 
-  TabelaPedidos () {
+  TabelaPedidos (indice, quantidade) {
     let titles = ["Representante","Cliente","Prazo","Entrega","Entrada","Obs"];
     let pedidos = this.state.dataTable;
-
-
     let body = [];
     let produtos = [];
     let total = 0.0;
@@ -328,91 +425,114 @@ class TelaLogin extends React.Component {
       ])
     );
     return (
-      <Table striped={true} hoverable={true} >
-        <thead>
-          {head}
-        </thead>
-        <tbody>
-          {body}
-        </tbody>
-      </Table>
-    )
-  }
-
-  TabelaPedidosNovo () {
-    let titles = ["Representante","Cliente","Prazo","Entrega","Entrada","Obs"];
-    let pedidos = this.state.dataTable;
-
-    let body = [];
-    let produtos = [];
-    let total = 0.0;
-    for(let item in pedidos){
-      let temp = [];
-        for(let produto of pedidos[item].data.produtos){
-          temp.push(
-            this.make_row([
-              this.make_col(produto.codigo),
-              this.make_col(produto.quantidade),
-              this.make_col((produto.total/produto.quantidade).toFixed(2)),
-              this.make_col(produto.total),
-              this.make_col(<Checkbox checked={produto.bonificacao} disabled={true} filledIn={true}/>),
-            ])
-          );
-          total += !produto.bonificacao ? produto.total : 0;
-        }
-        produtos.push(temp);
-      body.push(
-        this.make_row_collapsible(
-          [this.make_col(pedidos[item].data.representante),
-          this.make_col(pedidos[item].data.cliente),
-          this.make_col(this.checaPrazo(pedidos[item].data.prazo)),
-          this.make_col(new Date(pedidos[item].data.dataEntrega).toLocaleDateString("pt-br")),
-          this.make_col((pedidos[item].data.data.data+"-"+pedidos[item].data.data.mes+"-"+pedidos[item].data.data.ano)),
-          this.make_col(pedidos[item].data.obs),
-          ],
-          <Table style={{fontsize:6}} striped={true} hoverable={true}>
-            <thead>
-            {this.make_row([
-              this.make_col_title("Codigo"),
-              this.make_col_title("Quantidade"),
-              this.make_col_title("Unitario"),
-              this.make_col_title("Total"),
-              this.make_col_title("Bonificacao"),
-            ])}
-            </thead>
-            <tbody>
-            {produtos[item]}
-            {this.make_row(this.make_col_title("Total : R$"+total))}
-            </tbody>
-          </Table>
+      {
+        tabela:
+          this.make_table(head,body.slice(indice, quantidade)),
+        itens: body.length}
         )
-      );
-      total = 0.0;
-    }
-    let head = [];
-    head.push(
-      <div style={{width:"100%"}}>
-        <div style={{width:"10%"}}>{titles[0]}</div>
-        <div style={{width:"10%"}}>{titles[1]}</div>
-        <div style={{width:"10%"}}>{titles[2]}</div>
-        <div style={{width:"10%"}}>{titles[3]}</div>
-        <div style={{width:"10%"}}>{titles[4]}</div>
-        <div style={{width:"50%"}}>{titles[5]}</div>
-      </div>
-    );
-    return (
-      <div className="row">
-        <Collapsible>
-          <CollapsibleItem
-            header={head}
-            node="div"
-          >
-            {body}
-          </CollapsibleItem>
-        </Collapsible>
-      </div>
-    )
   }
+
+  TabelaDeCobranca () {
+    let titles = ["Representante", "Empresa", "Cliente", "Pedido", "Nota", "Parcela", "Emissao", "Vencimento", "Valor",
+      "Juros", "Dias", "Total"];
+    let head = [];
+    let body = [];
+    let cobrancas = this.state.dataCobranca.sort((a, b) => { return a.data.vencimento - b.data.vencimento });
+    const tempo_ms = 1000 * 60 * 60 * 24;
+    let hoje = new Date();
+    head.push(
+      this.make_row([
+        this.make_col_title(titles[0]),
+        this.make_col_title(titles[1]),
+        this.make_col_title(titles[2]),
+        this.make_col_title(titles[3]),
+        this.make_col_title(titles[4]),
+        this.make_col_title(titles[5]),
+        this.make_col_title(titles[6]),
+        this.make_col_title(titles[7]),
+        this.make_col_title(titles[8]),
+        this.make_col_title(titles[9]),
+        this.make_col_title(titles[10]),
+        this.make_col_title(titles[11]),
+      ])
+    );
+    console.log(cobrancas);
+    cobrancas.forEach(doc => {
+      let data_vencimento;
+      try {
+        data_vencimento = new Date(doc.data.vencimento.substr(6, 4) +
+          "-" +
+          doc.data.vencimento.substr(3, 2) +
+          "-" +
+          doc.data.vencimento.substr(0, 2));
+          } catch (e) {
+          console.log("erro",e);
+          }
+          let dias_vencidos = Math.floor((hoje - data_vencimento) / tempo_ms);
+      body.push(
+        this.make_row([
+          this.make_col(doc.data.representante),
+          this.make_col(doc.data.empresa),
+          this.make_col(doc.data.cliente),
+          this.make_col(doc.data.pedido),
+          this.make_col(doc.data.nota_fiscal),
+          this.make_col(doc.data.parcela),
+          this.make_col(doc.data.emissao),
+          this.make_col(doc.data.vencimento),
+          this.make_col("R$ "+doc.data.valor),
+          this.make_col("R$ "+(doc.data.valor*0.004*dias_vencidos).toFixed(2)),
+          this.make_col(dias_vencidos),
+          this.make_col("R$ "+(doc.data.valor+doc.data.valor*0.004*dias_vencidos).toFixed(2)),
+        ]))
+    });
+    return this.make_table(head,body);
+  };
+
+  consultaListaDeProducao = async() => {
+    try {
+      let response = await fetch(
+        'http://127.0.0.1:5000/producao'
+      );
+      let json = await response.json()
+      this.setState({dataProducao: json})
+    } catch (e) {
+      console.error(e)
+    }
+
+  }
+
+  TabelaDeProducao () {
+    let titles = ["numero_op", "item", "data_emissao", "status", "a_fabricar", "fabricado", "diferenca", "efetuado"]
+    let head = [];
+    let body = [];
+    let producao = this.state.dataProducao
+
+     head.push(
+      this.make_row([
+        this.make_col_title(titles[0]),
+        this.make_col_title(titles[1]),
+        this.make_col_title(titles[2]),
+        this.make_col_title(titles[3]),
+        this.make_col_title(titles[4]),
+        this.make_col_title(titles[5]),
+        this.make_col_title(titles[6]),
+        this.make_col_title(titles[7]),
+      ])
+    );
+    producao.forEach(doc => {
+      body.push(this.make_row([
+       this.make_col(doc.numero_op),
+     this.make_col(doc.item),
+     this.make_col(doc.data_emissao),
+     this.make_col(doc.status),
+     this.make_col(doc.a_fabricar),
+     this.make_col(doc.fabricado),
+     this.make_col(-1*doc.diferenca),
+     this.make_col((100*doc.efetuado).toFixed(2)+"%")
+     ]))
+    });
+     return this.make_table(head,body);
+  };
 
   Painel() {
     return (
@@ -443,60 +563,61 @@ class TelaLogin extends React.Component {
           vAxis: {
             title: 'Popularity',
           },
-        }}
+          }}
         rootProps={{ 'data-testid': '1' }}
       />
-    )
+      )
   }
 
   render() {
     return (
-      <div style={{display:"flex", flexDirection:"row"}}>
+      <div style={{display:"flex", flexDirection:"row", overflow: "hidden"}}>
         {this.LoginModal()}
         <div className="center-align" style={{width: "200px", height: "100vh", backgroundColor:"blue"}}>
           <div style={{height:62,paddingTop:"10%"}}>
-            <a className="white-text" style={{
-              marginBottom:"20px"
-            }}>
-              Prowater
-            </a>
+          <a className="white-text" style={{
+            marginBottom:"20px"
+          }}>
+            Prowater
+          </a>
           </div>
           <div style={{backgroundColor: "white",height: "1px",width: "80%",paddingLeft: "20px",marginLeft: "20px",marginBottom: "5px"}}/>
           {this.BotaoLateral("Pedidos",this.mostraTabelaPedido)}
+          {this.BotaoLateral("Cobrancas", this.mostraTabelaCobranca)}
+          {/*this.BotaoLateral("Clientes", this.callApiClientes)*/}
+          {this.BotaoLateral("Produção", this.mostraTabelaProducao)}
+          {this.BotaoLateral("Produção", this.mostraTabelaProducao)}
           {this.BotaoLateral("Sair",this.logOut)}
-        </div>
-        {this.state.currentWindow === "Painel" && this.Painel()}
-        {this.state.currentWindow === "Pedidos" && this.TabelaPedidos(this.state.dataTable)}
-      </div>
+          </div>
+          <div style={{flex:1, overflowY: "scroll"}}>
+          {this.state.currentWindow === "Painel" && this.Painel()}
+          {this.state.currentWindow === "Pedidos" && this.TabelaPedidos(0, 8).tabela}
+          {this.state.currentWindow === "Cobrancas" && this.TabelaDeCobranca()}
+          {this.state.currentWindow === "Producao" && this.TabelaDeProducao()}
+          </div>
+          </div>
     );
   }
+
 }
-/*<div
-  style={this.state.buttonStyle}
-  id="teste"
-  onMouseOver={() => this.setState({buttonStyle: styles.mouseOverStyle})}
-  onMouseOut={() => this.setState({buttonStyle: styles.mouseOutStyle})}
-> oin</div>*/
-const styles = {
-  mouseOverStyle: {
-    alignment:"center",
-    marginLeft:"10%",
-    borderRadius:"21px",
-    width:"80%",
-    height: 42,
-    backgroundColor:"white"},
-  mouseOutStyle: {
-    color:"white",
-    marginLeft:"10%",
-    width:"80%",
-    height: 32},
-  botaoLateral: {
-    width:"80%",
-    borderRadius:"5px",
-    paddingLeft:"5%",
-    marginBottom:"2%"
-  },
-};
-
-
-export default TelaLogin;
+  const styles = {
+    mouseOverStyle: {
+      alignment:"center",
+      marginLeft:"10%",
+      borderRadius:"21px",
+      width:"80%",
+      height: 42,
+      backgroundColor:"white"},
+    mouseOutStyle: {
+      color:"white",
+      marginLeft:"10%",
+      width:"80%",
+      height: 32},
+    botaoLateral: {
+      width:"80%",
+      borderRadius:"5px",
+      paddingLeft:"5%",
+      marginBottom:"2%"
+    },
+  };
+  export default TelaLogin;

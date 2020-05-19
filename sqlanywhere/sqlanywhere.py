@@ -1,169 +1,345 @@
-from time import strptime
-
+import requests
+from requests.exceptions import Timeout
 import pyodbc
+import queriesSQL as Query
+import redis
+
+"""Retorna email"""
 
 
-class Cliente:
-    '''Retorna email do cliente'''
+def getEmails(codigo, tipo):
+    conn = pyodbc.connect(Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    emails = conn.cursor().execute(Query.emailporcodigo(codigo, tipo))
+    lista_emails = []
+    for enderecos in emails:
+        endr = {"descricao": enderecos.descr.strip(), "endereco": enderecos.email_site.strip()}
+        lista_emails.append(endr)
+    conn.close()
+    return lista_emails
 
-    def getEmails(self, codigo):
-        conn = pyodbc.connect(Dsn="PW32", uid="BYTEC", pwd="BYTEC")
-        emails = conn.cursor().execute(
-            "select AMAIL_IDENTIFICA as descr, AMAIL_E_MAIL_WWW as email_site from SUPAMAIL where AMAIL_TIPO = 'C' and AMAIL_CODIGO = " + str(
-                codigo) + ";")
-        lista_emails = []
-        for enderecos in emails:
-            endr = {"descricao": enderecos.descr, "endereco": enderecos.email_site}
-            lista_emails.append(endr)
-        conn.close()
-        return lista_emails
 
-    '''Colecao de Clientes'''
+'''Colecao de Clientes'''
 
-    def info(self):
+
+def extratorcliente(listaclientes):
+    tempcliente = {}
+    lista_cliente = []
+    for cliente in listaclientes:
+        print(cliente)
+        try:
+            tempcliente = {"representante": cliente.REPRE, "zona": cliente.ZONA, "mercado": cliente.MERCADO.strip(),
+                           "rota": cliente.ROTA.strip(), "status": cliente.ST.strip(),
+                           "codigo": cliente.CODIGO,
+                           "fantasia": cliente.FANTASIA.strip(), "razao_social": cliente.AEMPR_RAZAO_SOCIAL.strip(),
+                           "endereco": {"rua": cliente.RUA.strip(), "numero": int(cliente.NUMERO),
+                                        "complemento": cliente.COMPLEMENTO.strip(),
+                                        "bairro": cliente.BAIRRO.strip(),
+                                        "cidade": cliente.CIDADE.strip(), "cep": int(cliente.CEP),
+                                        "uf": cliente.UF},
+                           "telefones": {"fixo": cliente.TELEFONE.strip(), "celular_0": cliente.CELULAR_1.strip(),
+                                         "celular_1": cliente.CELULAR_2.strip(),
+                                         "celular_2": cliente.CELULAR_3.strip()},
+                           "emails": getEmails(codigo=cliente.CODIGO, tipo="C"),
+                           "credito": {"pedido": float(cliente.PEDIDO), "aberto": float(cliente.ABERTO),
+                                       "vencido": float(cliente.VENCIDO),
+                                       "limite": float(cliente.Credito)},
+                           "ultimo_pedido": {"quantidade_caixas": int(cliente.NR_CX), "total": float(cliente.TOT_NOTA),
+                                             "emissao":
+                                                 (cliente.DT_EMISSAO[6:8] + "/" + cliente.DT_EMISSAO[
+                                                                                  4:6] + "/" + cliente.DT_EMISSAO[0:4])},
+                           "tabela_de_preco": {"prowater": cliente.TAB_PW, "proclean": cliente.TAB_PC,
+                                               "prolimp": cliente.TAB_PL},
+                           "condicao_de_pagamento": {"prowater": cliente.PGTOPW, "proclean": cliente.PGTOPC,
+                                                     "prolimp": cliente.PGTOPL}}
+        except:
+            print('erro')
+        lista_cliente.append(tempcliente)
+    return lista_cliente
+
+
+def clientes(**kwargs):
+    clientes = kwargs.get("clientes")
+    lista_clientes = None
+    if clientes is None:
         conn = pyodbc.connect(
             Dsn="PW32", uid="BYTEC", pwd="BYTEC")
-        conn.cursor().execute(
-            "SELECT b.REPRE as repre, b.ZONA as zona, b.MERCADO as mercado, b.ROTA as rota, b.ST as st, b.CODIGO as cod, b.FANTASIA as fant into #cliente FROM BYTEC2.VIEWROTAREPRESENTANTE b;")
-        conn.cursor().execute(
-            "SELECT CodigoEmpresa as emp, LimiteCred as cred into #credito FROM InfoCredCFT WHERE TipoEmpresa = \'C\';")
-        conn.cursor().execute(
-            "SELECT APEPC_EMPRESA as emp, APEPC_PEDIDO as ped, sum(APEPC_QTD_PEDIDA*APEPC_VALOR_ENC) as tot into #liberado FROM VNDAPEPC where APEPC_STATUS = \'L\' GROUP BY ped,emp;")
-        conn.cursor().execute(
-            "SELECT APECD_EMPREsA as emp, APECD_PEDIDO as ped, APECD_CLIENTE as cod into #clientepedido FROM VNDAPECD where APECD_TIPO_CLI = \'C\';")
-        conn.cursor().execute(
-            "SELECT ANFLN_EMPRESA as emp, ANFLN_PEDIDO as ped, ANFLN_NUM_NOTA as nota into #notapedido FROM VNDANFLN;")
-        conn.cursor().execute(
-            "SELECT codigoemp as emp, numero as nota, sum(valor+valorjuros) as tot into #pendente FROM ParcelaR where isnull(datediff(day,recebimento,getdate()),-1) = -1 GROUP BY emp, nota;")
-        conn.cursor().execute(
-            "SELECT ido.cod as cod, sum(ado.tot) as tot into #pedidosabertos FROM #clientepedido ido,#liberado ado WHERE ado.ped = ido.ped and ado.emp = ido.emp GROUP BY ido.cod;")
-        conn.cursor().execute(
-            "SELECT mpr.AEMPR_STATUS as ST,fcd.ANFCD_CLIENTE AS CLI, mpr.AEMPR_NOME_ABREV AS FANTASIA,fcd.ANFCD_EMPRESA AS EMP,fcd.ANFCD_NUM_NOTA AS NOTA, lar.VALOR as valor, lar.valorjuros as juros, lar.PARCELA as PARC, datediff(day,lar.Vencimento,now()) as vencido into #devendo FROM SUPAEMPR mpr, VNDANFCD fcd,VNDAEMDF mdf, PARCELAR lar, BYTEC2.VIEWROTAREPRESENTANTE nte where fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND fcd.ANFCD_CLIENTE = nte.CODIGO AND fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND lar.RECEBIMENTO IS NULL AND datediff(day,lar.Vencimento,now()) <= 0;")
-        conn.cursor().execute(
-            "select cli as cod,sum(valor) as tot into #dividacliente from #devendo GROUP BY cli;")
-        conn.cursor().execute(
-            "SELECT fcd.ANFCD_CLIENTE AS cod, fcd.ANFCD_EMPRESA AS EMP, fcd.ANFCD_NUM_NOTA AS NOTA, datediff(day,lar.Vencimento,now()) as vencido, lar.PARCELA as PARC, lar.VALOR as valor into #atrasado FROM     SUPAEMPR mpr,    VNDANFCD fcd,    VNDAEMDF mdf,    PARCELAR lar,    BYTEC2.VIEWROTAREPRESENTANTE nte where    fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND    fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND    fcd.ANFCD_CLIENTE = nte.CODIGO AND    fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND    fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND    fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND    fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND    SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND    lar.RECEBIMENTO IS NULL AND     lar.VENCIMENTO+1 <= now() EXCEPT (SELECT fcd.ANFCD_CLIENTE AS CLI, fcd.ANFCD_EMPRESA AS EMP, fcd.ANFCD_NUM_NOTA AS NOTA, datediff(day,lar.Vencimento,now()) as \"D VNC\", lar.PARCELA as PARC, lar.VALOR FROM SUPAEMPR mpr, VNDANFCD fcd, VNDAEMDF mdf, PARCELAR lar, BYTEC2.VIEWROTAREPRESENTANTE nte where fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND fcd.ANFCD_CLIENTE = nte.CODIGO AND fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND lar.RECEBIMENTO IS NULL AND lar.VENCIMENTO+1 <= now() AND lar.Vencimento = fcd.ANFCD_DATA_EMISSAO AND datediff(day,lar.Vencimento,now()) <= 2);")
-        conn.cursor().execute(
-            "select cod as cod,sum(valor+valor*0.004*vencido) as tot into #atrasocliente from #Atrasado where vencido > 0 GROUP BY cod;")
-        conn.cursor().execute(
-            "select ecd.APECD_CLIENTE, fcd.ANFCD_TOT_NOTA, sum(fln.ANFLN_QTD_IMP), DATAED(fcd.ANFCD_DATA_EMISSAO) INTO #r from VNDAPECD ecd, VNDANFCD fcd, VNDANFLN fln where ecd.APECD_CLIENTE = fcd.ANFCD_CLIENTE AND fln.ANFLN_NUM_NOTA = fcd.ANFCD_NUM_NOTA AND fln.ANFLN_PEDIDO = ecd.APECD_PEDIDO AND fcd.ANFCD_TIPO_OPER = 'NF1' AND datediff(day,ecd.APECD_DATA_CADAST,getdate()) <= 365 GROUP BY fcd.ANFCD_DATA_EMISSAO, ecd.APECD_CLIENTE, fcd.ANFCD_TOT_NOTA order by fcd.ANFCD_DATA_EMISSAO DESC;")
-        conn.cursor().execute(
-            "select secd.APECD_CLIENTE, sfcd.ANFCD_TOT_NOTA, sum(sfln.ANFLN_QTD_IMP), DATAED(sfcd.ANFCD_DATA_EMISSAO) INTO #t from VNDAPECD secd, VNDANFCD sfcd, VNDANFLN sfln, VNDANFCA sfca where secd.APECD_CLIENTE = sfcd.ANFCD_CLIENTE AND sfln.ANFLN_NUM_NOTA = sfcd.ANFCD_NUM_NOTA AND sfcd.ANFCD_NUM_NOTA = sfca.NUMERO_NFF AND sfln.ANFLN_PEDIDO = secd.APECD_PEDIDO AND sfcd.ANFCD_TIPO_OPER = 'NF1' AND datediff(day,secd.APECD_DATA_CADAST,getdate()) <= 365 GROUP BY sfcd.ANFCD_DATA_EMISSAO, secd.APECD_CLIENTE, sfcd.ANFCD_TOT_NOTA order by sfcd.ANFCD_DATA_EMISSAO DESC;")
-        conn.cursor().execute(
-            "select * INTO #ultimoPedido from #r EXCEPT select * from #t;")
-        conn.cursor().execute(
-            "select AEMFD_CODIGO as cod, AEMFD_COND_PGTO as PGTOPW into #condicaoPW from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 1")
-        conn.cursor().execute(
-            "select AEMFD_CODIGO as cod, AEMFD_COND_PGTO as PGTOPC into #condicaoPC from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 2")
-        conn.cursor().execute(
-            "select AEMFD_CODIGO as cod, AEMFD_COND_PGTO as PGTOPL into #condicaoPL from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 3")
-        clientes = conn.cursor().execute(
-            "SELECT b.REPRE, b.ZONA, b.MERCADO, b.ROTA, b.ST, b.CODIGO, b.FANTASIA, s.AEMPR_RAZAO_SOCIAL, s.AEMPR_RUA_AV as RUA, s.AEMPR_NRO as NUMERO, s.AEMPR_COMPL as COMPLEMENTO, b.BAIRRO, b.CIDADE, b.CEP, b.UF, b.CONTATO, b.TELEFONE, s.AEMPR_TELEX_CONT1 as CELULAR_1 , s.AEMPR_TELEX_CONT2 as CELULAR_2, s.AEMPR_TELEX_CONT3 as CELULAR_3,isnull((select tot from #pedidosabertos where cod = b.CODIGO),0) as PEDIDO,isnull((select tot from #atrasocliente where cod = b.CODIGO),0) as VENCIDO,isnull((select tot from #dividacliente where cod = b.CODIGO),0) as ABERTO,(select cred from #credito where emp = b.CODIGO) as Credito,isnull((select first ANFCD_TOT_NOTA from #ultimoPedido where APECD_CLIENTE = b.CODIGO),0) as TOT_NOTA,isnull((select first expression from #ultimoPedido where APECD_CLIENTE = b.CODIGO),0) as NR_CX,isnull((select first expression1 from #ultimoPedido where APECD_CLIENTE = b.CODIGO),\'00000000\') as DT_EMISSAO, isnull((select AEMFD_TABELA_PRECO from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 1 AND AEMFD_CODIGO = b.CODIGO),\'00001\') as TAB_PW,isnull((select AEMFD_TABELA_PRECO from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 2 AND AEMFD_CODIGO = b.CODIGO),\'00001\') as TAB_PC,isnull((select AEMFD_TABELA_PRECO from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 3 AND AEMFD_CODIGO = b.CODIGO),\'00001\') as TAB_PL, ( select PGTOPW from #condicaoPW where cod = b.CODIGO ), ( select PGTOPC from #condicaoPC where cod = b.CODIGO ), ( select PGTOPL from #condicaoPL where cod = b.CODIGO ) FROM BYTEC2.VIEWROTAREPRESENTANTE b, SUPAEMPR s WHERE b.CODIGO = s.AEMPR_CODIGO AND s.AEMPR_TIPO = 'C'")
-        lista_cliente = []
-        for x in clientes:
-            cliente = {"representante": x.REPRE, "zona": x.ZONA, "mercado": x.MERCADO, "rota": x.ROTA, "status": x.ST,
-                       "codigo": x.CODIGO,
-                       "fantasia": x.FANTASIA, "razao_social": x.AEMPR_RAZAO_SOCIAL,
-                       "endereco": {"rua": x.RUA, "numero": int(x.NUMERO),
-                                    "complemento": x.COMPLEMENTO,
-                                    "bairro": x.BAIRRO,
-                                    "cidade": x.CIDADE, "cep": int(x.CEP),
-                                    "uf": x.UF},
-                       "telefones": {"fixo": x.TELEFONE, "celular_0": x.CELULAR_1, "celular_1": x.CELULAR_2,
-                                     "celular_2": x.CELULAR_3},
-                       "emails": self.getEmails(codigo=x.CODIGO),
-                       "credito": {"pedido": float(x.PEDIDO), "aberto": float(x.ABERTO), "vencido": float(x.VENCIDO),
-                                   "limite": float(x.Credito)},
-                       "ultimo_pedido": {"quantidade_caixas": int(x.NR_CX), "total": float(x.TOT_NOTA),
-                                         "emissao": (x.DT_EMISSAO[0:3] + "/" + x.DT_EMISSAO[4:5] + "/" + x.DT_EMISSAO[
-                                                                                                         6:7])},
-                       "tabela_de_preco": {"prowater": x.TAB_PW, "proclean": x.TAB_PC, "prolimp": x.TAB_PL},
-                       "condicao_de_pagamento": {"prowater": x.PGTOPW, "proclean": x.PGTOPC, "prolimp": x.PGTOPL}}
-            lista_cliente.append(cliente)
+        for query in Query.clientes():
+            lista_clientes = conn.cursor().execute(query)
+        resultado = extratorcliente(lista_clientes)
         conn.close()
-        return lista_cliente
-
-    def infoFirst(self):
+        return resultado
+    elif isinstance(clientes, str):
         conn = pyodbc.connect(
             Dsn="PW32", uid="BYTEC", pwd="BYTEC")
-        conn.cursor().execute(
-            "SELECT b.REPRE as repre, b.ZONA as zona, b.MERCADO as mercado, b.ROTA as rota, b.ST as st, b.CODIGO as cod, b.FANTASIA as fant into #cliente FROM BYTEC2.VIEWROTAREPRESENTANTE b;")
-        conn.cursor().execute(
-            "SELECT CodigoEmpresa as emp, LimiteCred as cred into #credito FROM InfoCredCFT WHERE TipoEmpresa = \'C\';")
-        conn.cursor().execute(
-            "SELECT APEPC_EMPRESA as emp, APEPC_PEDIDO as ped, sum(APEPC_QTD_PEDIDA*APEPC_VALOR_ENC) as tot into #liberado FROM VNDAPEPC where APEPC_STATUS = \'L\' GROUP BY ped,emp;")
-        conn.cursor().execute(
-            "SELECT APECD_EMPREsA as emp, APECD_PEDIDO as ped, APECD_CLIENTE as cod into #clientepedido FROM VNDAPECD where APECD_TIPO_CLI = \'C\';")
-        conn.cursor().execute(
-            "SELECT ANFLN_EMPRESA as emp, ANFLN_PEDIDO as ped, ANFLN_NUM_NOTA as nota into #notapedido FROM VNDANFLN;")
-        conn.cursor().execute(
-            "SELECT codigoemp as emp, numero as nota, sum(valor+valorjuros) as tot into #pendente FROM ParcelaR where isnull(datediff(day,recebimento,getdate()),-1) = -1 GROUP BY emp, nota;")
-        conn.cursor().execute(
-            "SELECT ido.cod as cod, sum(ado.tot) as tot into #pedidosabertos FROM #clientepedido ido,#liberado ado WHERE ado.ped = ido.ped and ado.emp = ido.emp GROUP BY ido.cod;")
-        conn.cursor().execute(
-            "SELECT mpr.AEMPR_STATUS as ST,fcd.ANFCD_CLIENTE AS CLI, mpr.AEMPR_NOME_ABREV AS FANTASIA,fcd.ANFCD_EMPRESA AS EMP,fcd.ANFCD_NUM_NOTA AS NOTA, lar.VALOR as valor, lar.valorjuros as juros, lar.PARCELA as PARC, datediff(day,lar.Vencimento,now()) as vencido into #devendo FROM SUPAEMPR mpr, VNDANFCD fcd,VNDAEMDF mdf, PARCELAR lar, BYTEC2.VIEWROTAREPRESENTANTE nte where fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND fcd.ANFCD_CLIENTE = nte.CODIGO AND fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND lar.RECEBIMENTO IS NULL AND datediff(day,lar.Vencimento,now()) <= 0;")
-        conn.cursor().execute("select cli as cod,sum(valor) as tot into #dividacliente from #devendo GROUP BY cli;")
-        conn.cursor().execute(
-            "SELECT fcd.ANFCD_CLIENTE AS cod, fcd.ANFCD_EMPRESA AS EMP, fcd.ANFCD_NUM_NOTA AS NOTA, datediff(day,lar.Vencimento,now()) as vencido, lar.PARCELA as PARC, lar.VALOR as valor into #atrasado FROM     SUPAEMPR mpr,    VNDANFCD fcd,    VNDAEMDF mdf,    PARCELAR lar,    BYTEC2.VIEWROTAREPRESENTANTE nte where    fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND    fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND    fcd.ANFCD_CLIENTE = nte.CODIGO AND    fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND    fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND    fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND    fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND    SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND    lar.RECEBIMENTO IS NULL AND     lar.VENCIMENTO+1 <= now() EXCEPT (SELECT fcd.ANFCD_CLIENTE AS CLI, fcd.ANFCD_EMPRESA AS EMP, fcd.ANFCD_NUM_NOTA AS NOTA, datediff(day,lar.Vencimento,now()) as \"D VNC\", lar.PARCELA as PARC, lar.VALOR FROM SUPAEMPR mpr, VNDANFCD fcd, VNDAEMDF mdf, PARCELAR lar, BYTEC2.VIEWROTAREPRESENTANTE nte where fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND fcd.ANFCD_CLIENTE = nte.CODIGO AND fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND lar.RECEBIMENTO IS NULL AND lar.VENCIMENTO+1 <= now() AND lar.Vencimento = fcd.ANFCD_DATA_EMISSAO AND datediff(day,lar.Vencimento,now()) <= 2);")
-        conn.cursor().execute(
-            "select cod as cod,sum(valor+valor*0.004*vencido) as tot into #atrasocliente from #Atrasado where vencido > 0 GROUP BY cod;")
-        conn.cursor().execute(
-            "select ecd.APECD_CLIENTE, fcd.ANFCD_TOT_NOTA, sum(fln.ANFLN_QTD_IMP), DATAED(fcd.ANFCD_DATA_EMISSAO) INTO #r from VNDAPECD ecd, VNDANFCD fcd, VNDANFLN fln where ecd.APECD_CLIENTE = fcd.ANFCD_CLIENTE AND fln.ANFLN_NUM_NOTA = fcd.ANFCD_NUM_NOTA AND fln.ANFLN_PEDIDO = ecd.APECD_PEDIDO AND fcd.ANFCD_TIPO_OPER = 'NF1' AND datediff(day,ecd.APECD_DATA_CADAST,getdate()) <= 365 GROUP BY fcd.ANFCD_DATA_EMISSAO, ecd.APECD_CLIENTE, fcd.ANFCD_TOT_NOTA order by fcd.ANFCD_DATA_EMISSAO DESC;")
-        conn.cursor().execute(
-            "select secd.APECD_CLIENTE, sfcd.ANFCD_TOT_NOTA, sum(sfln.ANFLN_QTD_IMP), DATAED(sfcd.ANFCD_DATA_EMISSAO) INTO #t from VNDAPECD secd, VNDANFCD sfcd, VNDANFLN sfln, VNDANFCA sfca where secd.APECD_CLIENTE = sfcd.ANFCD_CLIENTE AND sfln.ANFLN_NUM_NOTA = sfcd.ANFCD_NUM_NOTA AND sfcd.ANFCD_NUM_NOTA = sfca.NUMERO_NFF AND sfln.ANFLN_PEDIDO = secd.APECD_PEDIDO AND sfcd.ANFCD_TIPO_OPER = 'NF1' AND datediff(day,secd.APECD_DATA_CADAST,getdate()) <= 365 GROUP BY sfcd.ANFCD_DATA_EMISSAO, secd.APECD_CLIENTE, sfcd.ANFCD_TOT_NOTA order by sfcd.ANFCD_DATA_EMISSAO DESC;")
-        conn.cursor().execute("select * INTO #ultimoPedido from #r EXCEPT select * from #t;")
-        clientes = conn.cursor().execute(
-            "SELECT b.REPRE, b.ZONA, b.MERCADO, b.ROTA, b.ST, b.CODIGO, b.FANTASIA, s.AEMPR_RAZAO_SOCIAL, s.AEMPR_RUA_AV as RUA, s.AEMPR_NRO as NUMERO, s.AEMPR_COMPL as COMPLEMENTO, b.BAIRRO, b.CIDADE, b.CEP, b.UF, b.CONTATO, b.TELEFONE, s.AEMPR_TELEX_CONT1 as CELULAR_1 , s.AEMPR_TELEX_CONT2 as CELULAR_2, s.AEMPR_TELEX_CONT3 as CELULAR_3,isnull((select tot from #pedidosabertos where cod = b.CODIGO),0) as PEDIDO,isnull((select tot from #atrasocliente where cod = b.CODIGO),0) as VENCIDO,isnull((select tot from #dividacliente where cod = b.CODIGO),0) as ABERTO,(select cred from #credito where emp = b.CODIGO) as Credito,isnull((select first ANFCD_TOT_NOTA from #ultimoPedido where APECD_CLIENTE = b.CODIGO),0) as TOT_NOTA,isnull((select first expression from #ultimoPedido where APECD_CLIENTE = b.CODIGO),0) as NR_CX,isnull((select first expression1 from #ultimoPedido where APECD_CLIENTE = b.CODIGO),'00000000') as DT_EMISSAO, isnull((select AEMFD_TABELA_PRECO from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 1 AND AEMFD_CODIGO = b.CODIGO),\'00001\') as TAB_PW,isnull((select AEMFD_TABELA_PRECO from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 2 AND AEMFD_CODIGO = b.CODIGO),\'00001\') as TAB_PC,isnull((select AEMFD_TABELA_PRECO from VNDAEMFD where AEMFD_TIPO = \'C\' AND AEMFD_EMPRESA = 3 AND AEMFD_CODIGO = b.CODIGO),\'00001\') as TAB_PL FROM BYTEC2.VIEWROTAREPRESENTANTE b, SUPAEMPR s WHERE b.CODIGO = s.AEMPR_CODIGO AND s.AEMPR_TIPO = 'C'")
-        lista_cliente = []
-        print(clientes.description)
-        for x in clientes:
-            cliente = {"representante": x.REPRE, "zona": x.ZONA, "mercado": x.MERCADO, "rota": x.ROTA, "status": x.ST,
-                       "codigo": x.CODIGO,
-                       "fantasia": x.FANTASIA, "razao_social": x.AEMPR_RAZAO_SOCIAL,
-                       "endereco": {"rua": x.RUA, "numero": int(x.NUMERO),
-                                    "complemento": x.COMPLEMENTO,
-                                    "bairro": x.BAIRRO,
-                                    "cidade": x.CIDADE, "cep": int(x.CEP),
-                                    "uf": x.UF},
-                       "telefones": {"fixo": x.TELEFONE, "celular_0": x.CELULAR_1, "celular_1": x.CELULAR_2,
-                                     "celular_2": x.CELULAR_3},
-                       "emails": self.getEmails(codigo=x.CODIGO),
-                       "credito": {"pedido": float(x.PEDIDO), "aberto": float(x.ABERTO), "vencido": float(x.VENCIDO),
-                                   "limite": float(x.Credito)},
-                       "ultimo_pedido": {"quantidade_caixas": int(x.NR_CX), "total": float(x.TOT_NOTA),
-                                         "emissao": (x.DT_EMISSAO[0:3] + "/" + x.DT_EMISSAO[4:5] + "/" + x.DT_EMISSAO[
-                                                                                                         6:7])},
-                       "tabela_de_preco": {"prowater": x.TAB_PW, "proclean": x.TAB_PC, "prolimp": x.TAB_PL}}
-            lista_cliente.append(cliente)
+        for query in Query.clienteporcodigo(clientes):
+            lista_clientes = conn.cursor().execute(query)
+        resultado = extratorcliente(lista_clientes)
         conn.close()
-        return lista_cliente
-
-
-class TabelaPreco:
-    def tabela(self):
+        return resultado
+    elif isinstance(clientes, list):
         conn = pyodbc.connect(
             Dsn="PW32", uid="BYTEC", pwd="BYTEC")
-        tabela_preco = conn.cursor().execute(
-            "select ( case ATITM_EMPRESA when 1 then 'prowater' when 2 then 'proclean' when 3 then 'prolimp'end CASE ) as emp, ATITM_TABELA_PRECO as tabela, ATITM_COD_ITEM as cod, ATITM_VALOR as valor from VNDATITM  where datediff(year,ATITM_DATA_FIN,getdate()) = 0 order by ATITM_DATA_FIN desc")
-        lista_tabela_preco = []
-        for item in tabela_preco:
-            temp = {"empresa": item.emp, "codigo": item.cod, "valor": float(item.valor), "tabela": item.tabela}
-            lista_tabela_preco.append(temp)
+        lista_clientes = []
+        for query in Query.clienteporcodigo(0)[0:18]:
+            conn.cursor().execute(query)
+        for cliente in clientes:
+            clientetemp = conn.cursor().execute(Query.clienteporcodigo(cliente)[-1])
+            lista_clientes.append(extratorcliente(clientetemp))
+        resultado = lista_clientes
         conn.close()
-        print(lista_tabela_preco)
-        return lista_tabela_preco
+        return resultado
+    else:
+        raise ValueError
 
 
-class Cobrancas:
-    def cobrancas(self):
+def tabelaprecos():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    tabela_preco = conn.cursor().execute(Query.tabelaprecos())
+    lista_tabela_preco = []
+    for item in tabela_preco:
+        temp = {"empresa": item.emp, "codigo": item.cod, "valor": float(item.valor), "tabela": item.tabela}
+        lista_tabela_preco.append(temp)
+    conn.close()
+    print(lista_tabela_preco)
+    return lista_tabela_preco
+
+
+def extratorcobranca(tabelacobrancas):
+    lista_de_cobrancas = []
+    for linha in tabelacobrancas:
+        temp = {"representante": linha.REPR, "cliente": linha.CLI, "empresa": linha.EMP, "nota_fiscal": linha.NOTA,
+                "pedido": linha.PED, "vencimento": linha.VCTO, "emissao": linha.EMISSAO, "parcela": linha.PARC,
+                "valor": float(linha.VALOR)}
+        lista_de_cobrancas.append(temp)
+    return lista_de_cobrancas
+
+
+def cobrancas():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    tabelacobrancas = conn.cursor().execute(Query.cobrancas())
+    resultado = extratorcobranca(tabelacobrancas)
+    conn.close()
+    return resultado
+
+
+def selecionaCobranca(**kwargs):
+    cliente = kwargs.get("cliente")
+    empresa = kwargs.get("empresa")
+    pedido = kwargs.get("pedido")
+    nota_fiscal = kwargs.get("nota_fiscal")
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    tabelacobrancas = conn.cursor().execute(
+        Query.cobrancasporargumentos(cliente=cliente, empresa=empresa, pedido=pedido, nota_fiscal=nota_fiscal))
+    resultado = extratorcobranca(tabelacobrancas)
+    conn.close()
+    return resultado
+
+
+def representantes():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    representantes = conn.cursor().execute(Query.representantes())
+    lista_de_representantes = []
+    for item in representantes:
+        temp = {"codigo": item.COD, "razao_social": item.RAZAO, "fantasia": item.FANT,
+                "email": getEmails(item.COD, tipo="R")}
+        lista_de_representantes.append(temp)
+    conn.close()
+    return lista_de_representantes
+
+
+def entregadivida():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.entregadivida():
+        consultas = conn.cursor().execute(query)
+    lista_entrega = []
+    for item in consultas:
+        temp = {"representante": item.REPRE, "mercado": item.MERCADO.strip(), "rota": item.ROTA.strip(),
+                "cliente": item.CLIENTE,
+                "fantasia": item.FANTASIA.strip(), "data_cadastro": item.CADAST, "previsao": item.PREV,
+                "empresa": item.EMPRESA,
+                "pedido": item.PEDIDO, "caixas": int(item.CX), "peso": float(item.PESO), "vencimento": item.VENCIMENTO}
+        lista_entrega.append(temp)
+    conn.close()
+    return lista_entrega
+
+
+def notascanceladasemotivo():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.notascanceladasemotivo():
+        consultas = conn.cursor().execute(query)
+    lista_notas_canceladas_e_motivo = []
+    for item in consultas:
+        temp = {"empresa": item.EMPRESA, "representante": item.REPRE, "rota": item.ROTA, "cliente": item.CLIENTE,
+                "fantasia": item.FANTASIA, "nff": item.NFF, "data_emissao": item.DATA_EMISSAO, "total": float(item.TOT),
+                "caixas": int(item.CX), "transporte": item.TRANSP, "nome_transporte": item.TRANSP_NOME,
+                "motivo": item.MOTIVO}
+        lista_notas_canceladas_e_motivo.append(temp)
+    conn.close()
+    return lista_notas_canceladas_e_motivo
+
+
+def emissaodenotasfiscais():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.emissaonotasfiscais():
+        consultas = conn.cursor().execute(query)
+    lista_notas_emitidas = []
+    for item in consultas:
+        temp = {"data": item.DATA, "trasnportes": item.TRANSP, "notas_fiscais": item.NR_NF,
+                "notas_bonificadas": item.NR_NB, "notas_fiscais_caixas": int(item.CX_NF),
+                "notas_bonificadas_caixas": int(item.CX_NB), "notas_fiscais_canceladas": (item.NR_NF_CAN),
+                "notas_bonificadas_canceladas": (item.NR_NB_CAN),
+                "notas_fiscais_canceladas_caixas": int(item.CX_NF_CAN),
+                "notas_bonificadas_canceladas_caixas": int(item.CX_NB_CAN),
+                "notas_fiscais_realizado": (item.NR_NF_REAL),
+                "notas_bonificadas_realizado": (item.NR_NB_REAL),
+                "notas_fiscais_caixas_realizado": int(item.REALIZADO_NF),
+                "notas_bonificadas_caixas_realizado": int(item.REALIZADO_NB), "taxa_bonificacao": float(item.BNF)}
+        lista_notas_emitidas.append(temp)
+    conn.close()
+    return lista_notas_emitidas
+
+
+def producao():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    consultas = conn.cursor().execute(Query.producao())
+    lista_producao = []
+    for item in consultas:
+        temp = {"numero_op": item.NUM_OP, "item": item.ITEM, "data_emissao": item.DT_EMISSAO, "status": item.ST,
+                "a_fabricar": int(item.A_FABRICAR), "fabricado": int(item.FABRICADO), "diferenca": int(item.DIFERENCA),
+                "efetuado": float(item.EFETUADO)}
+        lista_producao.append(temp)
+    conn.close()
+    return lista_producao
+
+
+def relatoriodecompras():
+    conn = pyodbc.connect(
+        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.relatoriodecompas():
+        consultas = conn.cursor().execute(query)
+    lista_clientes = []
+    for item in consultas:
+        temp = {"representante": item.REPRE, "zona": item.ZONA.strip(), "rota": item.ROTA.strip(),
+                "tempo_pedido": int(item.PED),
+                "tempo_faturado": int(item.FAT), "data_faturamento": item.DT_FAT, "total_valor": float(item.VLR_NF),
+                "total_caixas": int(item.NR_CX), "cobrancas": int(item.COB), "status": item.ST, "codigo": item.CODIGO,
+                "fantasia": item.FANTASIA.strip(), "razao_social": item.RAZAO_SOCIAL.strip(), "cnpj_cpf": item.CNPJ_CPF,
+                "email": item.EMAIL,
+                "contato": item.CONTATO.strip(), "celular": item.CELULAR.strip(), "telefone": item.TELEFONE.strip(),
+                "endereco": item.ENDERECO.strip(),
+                "bairro": item.BAIRRO.strip(), "cidade": item.CIDADE.strip(), "cep": int(item.CEP), "uf": item.UF}
+        lista_clientes.append(temp)
+    conn.close()
+    return lista_clientes
+
+
+class Exportar:
+    def geolocationAPI(self, respostas, cliente, session):
+        endereco = f"{str(cliente['endereco']['numero'])}+{cliente['endereco']['rua'].strip().replace(' ', '+')},+{cliente['endereco']['cidade'].strip().replace(' ', '+')},+{cliente['endereco']['uf']}"
+        endereco_b = f"{cliente['endereco']['numero']} {cliente['endereco']['rua'].strip()}, {cliente['endereco']['cidade'].strip()}, {cliente['endereco']['uf']}"
+        key = "AIzaSyDGcf4b5BG9NNV__GQbzTdZ7QJAcOeMyRA"
+        try:
+            location = session.get(
+                url=f"https://maps.googleapis.com/maps/api/geocode/json?address={endereco}&key={key}",
+                timeout=(2, 2)).json()
+        except Timeout:
+            location = {"status": Timeout}
+
+        respostas.append({"location": location,
+                          "cliente": cliente, "endereco": endereco_b})
+
+    def clientes(self):
+        sessison = requests.Session()
+        sessison.auth = ("username", "password")
+        file_path = "C:\\Teste\\locais.csv"
+        file = open(file_path, "w")
+        file.write("Latitude;Longitude;Address;ST;Name;Codigo;Rota\n")
+        respostas = []
         conn = pyodbc.connect(
             Dsn="PW32", uid="BYTEC", pwd="BYTEC")
-        cobrancas = conn.cursor().execute(
-            "SELECT mpr.AEMPR_REPR AS REPR,fcd.ANFCD_CLIENTE AS CLI,( case fcd.ANFCD_EMPRESA when 1 then 'prowater' when 2 then 'proclean' when 3 then 'prolimp'end CASE ) AS EMP,fcd.ANFCD_NUM_NOTA AS NOTA,(select ANFLN_PEDIDO as PED from VNDANFLN WHERE ANFLN_EMPRESA = fcd.ANFCD_EMPRESA AND ANFLN_NUM_NOTA = NOTA GROUP BY PED),    DATAED(fcd.ANFCD_DATA_EMISSAO) AS EMISSAO, DATAEF(lar.VENCIMENTO) AS VCTO, lar.PARCELA as PARC, lar.VALOR FROM SUPAEMPR mpr, VNDANFCD fcd, VNDAEMDF mdf, PARCELAR lar, BYTEC2.VIEWROTAREPRESENTANTE nte where fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND fcd.ANFCD_CLIENTE = nte.CODIGO AND fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND lar.RECEBIMENTO IS NULL AND  lar.VENCIMENTO+1 <= now() EXCEPT ( SELECT mpr.AEMPR_REPR AS REPR, fcd.ANFCD_CLIENTE AS CLI, fcd.ANFCD_EMPRESA AS EMP, fcd.ANFCD_NUM_NOTA AS NOTA, (select ANFLN_PEDIDO as pedido from VNDANFLN WHERE ANFLN_EMPRESA = fcd.ANFCD_EMPRESA AND ANFLN_NUM_NOTA = NOTA GROUP BY pedido), DATAED(fcd.ANFCD_DATA_EMISSAO) AS EMISSAO,  DATAEF(lar.VENCIMENTO) AS VCTO, lar.PARCELA as PARC, lar.VALOR FROM SUPAEMPR mpr, VNDANFCD fcd, VNDAEMDF mdf, PARCELAR lar, BYTEC2.VIEWROTAREPRESENTANTE nte where fcd.ANFCD_TIPO_EMPR = mpr.AEMPR_TIPO AND fcd.ANFCD_CLIENTE = mpr.AEMPR_CODIGO AND fcd.ANFCD_CLIENTE = nte.CODIGO AND fcd.ANFCD_TIPO_EMPR = mdf.AEMDF_TIPO AND fcd.ANFCD_CLIENTE = mdf.AEMDF_CODIGO AND fcd.ANFCD_EMPRESA = LAR.CODIGOEMP AND fcd.ANFCD_UNIDADE = LAR.CODIGOUNIDADE AND SUBSTR(fcd.ANFCD_NUM_NOTA,3,10) = LAR.NUMERO AND lar.RECEBIMENTO IS NULL AND  lar.VENCIMENTO+1 <= now() AND  lar.Vencimento = fcd.ANFCD_DATA_EMISSAO AND  datediff(day,lar.Vencimento,now()) <= 2)")
-        lista_de_cobrancas = []
-        for item in cobrancas:
-            temp = {"representante": item.REPR, "cliente": item.CLI, "empresa": item.EMP, "nota_fiscal": item.NOTA,
-                    "pedido": item.PED, "vencimento": item.VCTO, "emissao": item.EMISSAO, "parcela": item.PARC, "valor": float(item.VALOR)}
-            lista_de_cobrancas.append(temp)
+        listaClientes = clientes()
         conn.close()
-        return lista_de_cobrancas
+        numero_de_clientes = len(listaClientes)
+        i = 0
+        print(f"Consulta resultou em {numero_de_clientes} resultados")
+        for cliente in listaClientes:
+            self.geolocationAPI(respostas, cliente, sessison)
+            i += 1
+            print(f'Cliente {i} de {numero_de_clientes}')
+        print(f"Consulta de geolocalização terminada\n Iniciando escrita de arquivo em {file_path}")
+        for x in respostas:
+            if x["location"].get("status") == "OK":
+                geolocation = str(
+                    x.get("location").get("results")[0].get("geometry").get("location").get("lat")) + ";" + str(
+                    x.get("location").get("results")[0].get("geometry").get("location").get("lng"))
+                file.write(
+                    f"{geolocation};"
+                    f"{x['endereco']};"
+                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['fantasia']};"
+                    f"{x['cliente']['codigo']};"
+                    f"{x['cliente']['rota']}\n")
+            else:
+                geolocation = str(0) + ";" + str(0)
+                file.write(
+                    f"{geolocation};"
+                    f"{x['endereco']};"
+                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['fantasia']};"
+                    f"{x['cliente']['codigo']};"
+                    f"{x['cliente']['rota']}\n")
+        file.close()
+
+    def cliente(self, codigo):
+        sessison = requests.Session()
+        sessison.auth = ("username", "password")
+        file_path = f"C:\\Teste\\local{codigo}.csv"
+        file = open(file_path, "w")
+        file.write("Latitude;Longitude;Address;ST;Name;Codigo;Rota\n")
+        respostas = []
+        conn = pyodbc.connect(
+            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        listaClientes = clientes(clientes=codigo)
+        conn.close()
+        numero_de_clientes = len(listaClientes)
+        i = 0
+        print(f"Consulta resultou em {numero_de_clientes} resultados")
+        for cliente in listaClientes:
+            self.geolocationAPI(respostas, cliente[0], sessison)
+            i += 1
+            print(f'Cliente {i} de {numero_de_clientes}')
+        print(f"Consulta de geolocalização terminada\n Iniciando escrita de arquivo em {file_path}")
+        for x in respostas:
+            if x["location"].get("status") == "OK":
+                geolocation = str(
+                    x.get("location").get("results")[0].get("geometry").get("location").get("lat")) + ";" + str(
+                    x.get("location").get("results")[0].get("geometry").get("location").get("lng"))
+                file.write(
+                    f"{geolocation};"
+                    f"{x['endereco']};"
+                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['fantasia']};"
+                    f"{x['cliente']['codigo']};"
+                    f"{x['cliente']['rota']}\n")
+            else:
+                geolocation = str(0) + ";" + str(0)
+                file.write(
+                    f"{geolocation};"
+                    f"{x['endereco']};"
+                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['fantasia']};"
+                    f"{x['cliente']['codigo']};"
+                    f"{x['cliente']['rota']}\n")
+        file.close()
