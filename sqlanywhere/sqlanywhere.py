@@ -25,7 +25,6 @@ def extratorcliente(listaclientes):
     tempcliente = {}
     lista_cliente = []
     for cliente in listaclientes:
-        print(cliente)
         try:
             tempcliente = {"representante": cliente.REPRE, "zona": cliente.ZONA, "mercado": cliente.MERCADO.strip(),
                            "rota": cliente.ROTA.strip(), "status": cliente.ST.strip(),
@@ -101,7 +100,6 @@ def tabelaprecos():
         temp = {"empresa": item.emp, "codigo": item.cod, "valor": float(item.valor), "tabela": item.tabela}
         lista_tabela_preco.append(temp)
     conn.close()
-    print(lista_tabela_preco)
     return lista_tabela_preco
 
 
