@@ -2,28 +2,14 @@ const express = require('express');
 const axios = require('axios')
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
+var schedule = require('node-schedule');
 
 const urlmongo = 'mongodb://localhost:27017';
 const dbname = 'prowater';
 const client = new MongoClient(urlmongo);
 const app = express();
 const port = process.env.PORT || 5001;
-
-client.connect(async (mongoError) =>{
-  assert.equal(null,mongoError);
-  console.log("Connected to mongodb server");
-  const db = client.db(dbname);
-  setTimeout(() => {getApiProducao(db)}, 5000);
-  setTimeout(() => {getApiTabelaPreco(db)},5000);
-  setTimeout(() => {getApiRepresentantes(db);},5000);
-  setTimeout(() => {getApicobrancas(db)},5000);
-  setTimeout(() => {getApiNotasCanceladas(db)},5000);
-  setTimeout(() => {getApiEmissaoNotas(db)},5000);
-  setTimeout(() => {getApiEntregaDivida(db)},5000);
-  setTimeout(() => {getApiRelatoriodecompras(db)},5000);
-  setTimeout(() => {getApiclientes(db)},5000);
-  //await client.close();
-});
+const minuto = 1000*60;
 
 function getApiRepresentantes(db) {
   axios.post(' http://127.0.0.1:5000/representantes',
@@ -36,7 +22,6 @@ function getApiRepresentantes(db) {
         console.error("Error REP",reason)
       })
     })
-    return res.data
   })
   .catch((error) => {
     console.error(error)
@@ -74,9 +59,6 @@ function getApiTabelaPreco(db) {
         console.error("Error TAB",reason)
       })
     })
-
-    return res.data
-
   })
   .catch((error) => {
     console.error(error)
@@ -96,9 +78,6 @@ function getApicobrancas(db) {
         console.error("Error COB",reason)
       })
     })
-
-    return res.data
-
   })
   .catch((error) => {
     console.error(error)
@@ -116,9 +95,6 @@ function getApiProducao(db) {
         console.error("Error PROD",reason)
       })
     })
-
-    return res.data
-
   })
   .catch((error) => {
     console.error(error)
@@ -138,9 +114,6 @@ function getApiNotasCanceladas(db) {
         console.error("Error NC",reason)
       })
     })
-
-    return res.data
-
   })
   .catch((error) => {
     console.error(error)
@@ -160,9 +133,6 @@ function getApiEntregaDivida(db) {
         console.error("Error ENTD",reason)
       })
     })
-
-    return res.data
-
   })
   .catch((error) => {
     console.error(error)
@@ -180,9 +150,6 @@ function getApiEmissaoNotas(db) {
         console.error("Error EMN",reason)
       })
     })
-
-    return res.data
-
   })
   .catch((error) => {
     console.error(error)
@@ -205,6 +172,33 @@ function getApiRelatoriodecompras(db) {
     console.error(error)
   })
 }
+
+client.connect(async (mongoError) =>{
+  assert.equal(null,mongoError);
+  console.log("Connected to mongodb server");
+  const db = client.db(dbname);
+  setTimeout(() => {getApiProducao(db)}, 5000);
+  setTimeout(() => {getApiTabelaPreco(db)},5000);
+  setTimeout(() => {getApiRepresentantes(db);},5000);
+  setTimeout(() => {getApicobrancas(db)},5000);
+  setTimeout(() => {getApiNotasCanceladas(db)},5000);
+  setTimeout(() => {getApiEmissaoNotas(db)},5000);
+  setTimeout(() => {getApiEntregaDivida(db)},5000);
+  setTimeout(() => {getApiRelatoriodecompras(db)},5000);
+  setTimeout(() => {getApiclientes(db)},5000);
+  //await client.close();
+});
+
+setInterval(() => {getApiProducao(client.db(dbname))}, 10*minuto);
+setInterval(() => {getApiTabelaPreco(client.db(dbname))},10*minuto);
+setInterval(() => {getApiRepresentantes(client.db(dbname));},10*minuto);
+setInterval(() => {getApicobrancas(client.db(dbname))},10*minuto);
+setInterval(() => {getApiNotasCanceladas(client.db(dbname))},10*minuto);
+setInterval(() => {getApiEmissaoNotas(client.db(dbname))},10*minuto);
+setInterval(() => {getApiEntregaDivida(client.db(dbname))},10*minuto);
+setInterval(() => {getApiRelatoriodecompras(client.db(dbname))},10*minuto);
+setInterval(() => {getApiclientes(client.db(dbname))},10*minuto);
+
 
 app.get('/api/mensagem', (req, res) => {
 
