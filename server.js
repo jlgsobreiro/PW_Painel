@@ -8,6 +8,11 @@ const urlmongo = 'mongodb://localhost:27017';
 const dbname = 'prowater';
 const client = new MongoClient(urlmongo);
 const app = express();
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
 const port = process.env.PORT || 5001;
 const minuto = 1000*60;
 
@@ -16,7 +21,7 @@ function getApiRepresentantes(db) {
   )
   .then((res) => {
     res.data.forEach(value => {
-      db.collection("representantes").updateOne({codigo: value.codigo}, {$set: value}).then(value => {
+      db.collection("representantes").update({codigo: value.codigo}, {$set: value}).then(value => {
         //console.log("OK",value)
       }).catch(reason => {
         console.error("Error REP",reason)
@@ -33,7 +38,7 @@ function getApiclientes(db) {
   )
   .then((res) => {
     res.data.forEach(value => {
-      db.collection("clientes").updateOne({codigo: value.codigo}, {$set: value}).then(value => {
+      db.collection("clientes").update({codigo: value.codigo}, {$set: value}).then(value => {
         //console.log("OK",value)
       }).catch(reason => {
         console.error("Error CLI",reason)
@@ -52,7 +57,7 @@ function getApiTabelaPreco(db) {
   .then((res) => {
     res.data.forEach(value => {
       db.collection("tabela_preco")
-        .updateOne({codigo: value.codigo, empresa: value.empresa, tabela: value.tabela}, {$set: value})
+        .update({codigo: value.codigo, empresa: value.empresa, tabela: value.tabela}, {$set: value})
         .then(value => {
         //console.log("OK",value)
       }).catch(reason => {
@@ -71,7 +76,7 @@ function getApicobrancas(db) {
   .then((res) => {
     res.data.forEach(value => {
       db.collection("cobrancas")
-        .updateOne({cliente: value.cliente, empresa: value.empresa, nota_fiscal: value.nota_fiscal},{$set: value})
+        .update({cliente: value.cliente, empresa: value.empresa, nota_fiscal: value.nota_fiscal},{$set: value},{upsert: true})
         .then(value => {
         //console.log("OK",value)
       }).catch(reason => {
@@ -89,7 +94,7 @@ function getApiProducao(db) {
   )
   .then((res) => {
     res.data.forEach(value => {
-      db.collection("producao").updateOne({numero_op: value.numero_op},{$set: value}).then(value => {
+      db.collection("producao").update({numero_op: value.numero_op},{$set: value},{upsert: true}).then(value => {
         //console.log("OK",value)
       }).catch(reason => {
         console.error("Error PROD",reason)
@@ -107,7 +112,7 @@ function getApiNotasCanceladas(db) {
   .then((res) => {
     res.data.forEach(value => {
       db.collection("notas_canceladas")
-        .updateOne({cliente: value.cliente, empresa: value.empresa, nff: value.nff},{$set: value})
+        .update({cliente: value.cliente, empresa: value.empresa, nff: value.nff},{$set: value},{upsert: true})
         .then(value => {
         //console.log("OK",value)
       }).catch(reason => {
@@ -126,7 +131,7 @@ function getApiEntregaDivida(db) {
   .then((res) => {
     res.data.forEach(value => {
       db.collection("entrega_divida")
-        .updateOne({cliente: value.cliente,empresa: value.empresa, pedido: value.pedido},{$set: value})
+        .update({cliente: value.cliente,empresa: value.empresa, pedido: value.pedido},{$set: value},{upsert: true})
         .then(value => {
         //console.log("OK",value)
       }).catch(reason => {
@@ -144,7 +149,7 @@ function getApiEmissaoNotas(db) {
   )
   .then((res) => {
     res.data.forEach(value => {
-      db.collection("emissao_notas").updateOne({data: value.data},{$set: value}).then(value => {
+      db.collection("emissao_notas").update({data: value.data},{$set: value},{upsert: true}).then(value => {
         //console.log("OK",value)
       }).catch(reason => {
         console.error("Error EMN",reason)
@@ -161,7 +166,7 @@ function getApiRelatoriodecompras(db) {
   )
   .then((res) => {
     res.data.forEach(value => {
-      db.collection("relatorio_de_compras").updateOne({codigo: value.codigo},{$set: value}).then(value => {
+      db.collection("relatorio_de_compras").update({codigo: value.codigo},{$set: value},{upsert: true}).then(value => {
     //console.log("OK",value)
   }).catch(reason => {
     console.error("Error REL",reason)
@@ -199,9 +204,37 @@ setInterval(() => {getApiEntregaDivida(client.db(dbname))},10*minuto);
 setInterval(() => {getApiRelatoriodecompras(client.db(dbname))},10*minuto);
 setInterval(() => {getApiclientes(client.db(dbname))},10*minuto);
 
-
+app.get('/api/producao', (req, res) => {
+  client.db(dbname).collection("producao").find({}).sort({numero_op: -1}).toArray( (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  })
+});
+app.get('/api/tabelapreco', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/representantes', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/cobrancas', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/notascanceladas', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/emissaonotas', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/entregadivida', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/relatoriodecompras', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
+app.get('/api/clientes', (req, res) => {
+  res.send({ express: 'Hello From Express' });
+});
 app.get('/api/mensagem', (req, res) => {
-
   res.send({ express: 'Hello From Express' });
 });
 

@@ -491,7 +491,7 @@ class TelaLogin extends React.Component {
   consultaListaDeProducao = async() => {
     try {
       let response = await fetch(
-        'http://127.0.0.1:5000/producao'
+        'http://127.0.0.1:5001/api/producao'
       );
       let json = await response.json()
       this.setState({dataProducao: json})
@@ -585,7 +585,6 @@ class TelaLogin extends React.Component {
           {this.BotaoLateral("Pedidos",this.mostraTabelaPedido)}
           {this.BotaoLateral("Cobrancas", this.mostraTabelaCobranca)}
           {/*this.BotaoLateral("Clientes", this.callApiClientes)*/}
-          {this.BotaoLateral("Produção", this.mostraTabelaProducao)}
           {this.BotaoLateral("Produção", this.mostraTabelaProducao)}
           {this.BotaoLateral("Sair",this.logOut)}
           </div>
