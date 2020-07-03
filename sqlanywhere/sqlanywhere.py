@@ -258,6 +258,11 @@ class Exportar:
         respostas.append({"location": location,
                           "cliente": cliente, "endereco": endereco_b})
 
+    def NogeolocationAPI(self, respostas, cliente):
+        endereco_b = f"{cliente['endereco']['numero']} {cliente['endereco']['rua'].strip()}, {cliente['endereco']['cidade'].strip()}, {cliente['endereco']['uf']}"
+
+        respostas.append({"cliente": cliente, "endereco": endereco_b})
+
     def clientes(self):
         sessison = requests.Session()
         sessison.auth = ("username", "password")
@@ -298,6 +303,32 @@ class Exportar:
                     f"{x['cliente']['fantasia']};"
                     f"{x['cliente']['codigo']};"
                     f"{x['cliente']['rota']}\n")
+        file.close()
+
+    def clientes_nogeo(self):
+        file_path = "C:\\Teste\\locais.csv"
+        file = open(file_path, "w")
+        file.write("Address;ST;Name;Codigo;Rota\n")
+        respostas = []
+        conn = pyodbc.connect(
+            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        listaClientes = clientes()
+        conn.close()
+        numero_de_clientes = len(listaClientes)
+        i = 0
+        print(f"Consulta resultou em {numero_de_clientes} resultados")
+        for cliente in listaClientes:
+            self.NogeolocationAPI(respostas, cliente)
+            i += 1
+            print(f'Cliente {i} de {numero_de_clientes}')
+        print(f"Iniciando escrita de arquivo em {file_path}")
+        for x in respostas:
+            file.write(
+                f"{x['endereco']};"
+                f"{x['cliente']['status']};"
+                f"{x['cliente']['fantasia']};"
+                f"{x['cliente']['codigo']};"
+                f"{x['cliente']['rota']}\n")
         file.close()
 
     def cliente(self, codigo):
