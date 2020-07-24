@@ -7,7 +7,7 @@ import redis
 """Retorna email"""
 
 
-def getEmails(codigo, tipo):
+def getEmails(codigo: any, tipo: str):
     conn = pyodbc.connect(Dsn="PW32", uid="BYTEC", pwd="BYTEC")
     emails = conn.cursor().execute(Query.emailporcodigo(codigo, tipo))
     lista_emails = []
@@ -21,7 +21,7 @@ def getEmails(codigo, tipo):
 '''Colecao de Clientes'''
 
 
-def extratorcliente(listaclientes):
+def extratorcliente(listaclientes: list):
     tempcliente = {}
     lista_cliente = []
     for cliente in listaclientes:
@@ -57,6 +57,10 @@ def extratorcliente(listaclientes):
 
 
 def clientes(**kwargs):
+    """
+    :param kwargs: str or list or none
+    :return: list
+    """
     clientes = kwargs.get("clientes")
     lista_clientes = None
     if clientes is None:

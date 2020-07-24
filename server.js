@@ -13,10 +13,11 @@ firebaseadmin.initializeApp({
 
 const firestoredb = firebaseadmin.firestore();
 
-
+//Configurações de conexão do MongoDB
 const urlmongo = 'mongodb://localhost:27017';
 const dbname = 'prowater';
 const client = new MongoClient(urlmongo);
+
 const app = express();
 
 app.use((req, res, next) => {
@@ -26,6 +27,9 @@ app.use((req, res, next) => {
 const port = process.env.PORT || 5001;
 const minuto = 1000*60;
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Representantes e depois atualiza o registro dele no MongoDB
 function getApiRepresentantes(db) {
   axios.post(' http://127.0.0.1:5000/representantes',
   )
@@ -45,6 +49,11 @@ function getApiRepresentantes(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Clientes e
+// depois atualiza o registro dele no MongoDB
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApiclientes(db) {
   axios.post(' http://127.0.0.1:5000/cliente',
   )
@@ -64,6 +73,12 @@ function getApiclientes(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Produtos e
+// seus valores de acordo com a tabela de preços
+// e depois atualiza os registros deles no MongoDB
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApiTabelaPreco(db) {
   axios.post(' http://127.0.0.1:5000/tabela_preco',
   )
@@ -84,6 +99,12 @@ function getApiTabelaPreco(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Empresas
+// devedoras e depois atualiza ou apaga o registro
+// dela no MongoDB casa já não exista no SQLAnywhere
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApicobrancas(db) {
   axios.post(' http://127.0.0.1:5000/cobrancas',
   )
@@ -110,6 +131,12 @@ function getApicobrancas(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Produtos
+// produzidos e depois atualiza o registro deles no
+// MongoDB
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApiProducao(db) {
   axios.post(' http://127.0.0.1:5000/producao',
   )
@@ -127,6 +154,12 @@ function getApiProducao(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Notas que foram
+// canceladas e o motivo e depois atualiza o registro
+// dele no MongoDB
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApiNotasCanceladas(db) {
   axios.post(' http://127.0.0.1:5000/notascanceladas',
   )
@@ -146,6 +179,14 @@ function getApiNotasCanceladas(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Pedidos em aberto
+// e depois atualiza ou apaga o registro dele no MongoDB
+// caso já tenha sido entregue
+/** @deprecated  Precisa se Atualizada para ser equivalente
+ * a tabela de pedidos em aberto
+*@param {MongoClient} db Cliente MongoDB*/
 function getApiEntregaDivida(db) {
   axios.post(' http://127.0.0.1:5000/entregadivida',
   )
@@ -171,6 +212,12 @@ function getApiEntregaDivida(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Notas fiscais emitidas
+// e depois atualiza ou insere o registro delas no MongoDB
+// caso não existam
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApiEmissaoNotas(db) {
   axios.post(' http://127.0.0.1:5000/emissaonotas',
   )
@@ -188,6 +235,12 @@ function getApiEmissaoNotas(db) {
   })
 }
 
+//Requisição feita para a API do SQLAnywhere
+//Usa a conexão do MongoDB como parametro
+//Recebe no post do Axios uma lista de Clientes e a ultima
+//compra feita por ele e outras informações e atualiza ou
+//insere no MongoDB
+/**@param {MongoClient} db Cliente MongoDB*/
 function getApiRelatoriodecompras(db) {
   axios.post(' http://127.0.0.1:5000/relatoriodecompras',
   )
@@ -205,6 +258,11 @@ function getApiRelatoriodecompras(db) {
   })
 }
 
+
+/**@param {MongoClient} mongoClient Cliente MongoDB
+ * @param {firestoredb} firestoreDatabase Cliente Firestore
+ * @this getFirestoreClientes
+ * Sincroniza dados de Clientes do Firebase com a coleção "relatorio_de_compras_firestore"*/
 function getFirestoreClientes(mongoClient, firestoreDatabase){
   firestoredb.collection("clientes")
     .get()
@@ -215,7 +273,9 @@ function getFirestoreClientes(mongoClient, firestoreDatabase){
           {codigo: value.codigo},
           {$set: value},
           {upsert: true})
-        .then(value => {})
+        .then(value => {
+          console.log("??",value.toString().hashCode())
+        })
         .catch(reason => {
           console.error("Error REL",reason)
         })
@@ -258,20 +318,22 @@ function getFirestorePedidos(db){
     .catch(reason => {})
 }
 
+//Conexão com MongoDb
+//Sincroniza com banco de dados SQLAnywhere
 client.connect(async (mongoError) =>{
   assert.equal(null,mongoError);
   console.log("Connected to mongodb server");
   const db = client.db(dbname);
-  //setTimeout(() => {getApiProducao(db)}, 5000);
+  setTimeout(() => {getApiProducao(db)}, 5000);
   setTimeout(() => {getApiTabelaPreco(db)},5000);
-  //setTimeout(() => {getApiRepresentantes(db);},5000);
+  setTimeout(() => {getApiRepresentantes(db);},5000);
   setTimeout(() => {getApicobrancas(db)},5000);
-  //setTimeout(() => {getApiNotasCanceladas(db)},5000);
-  //setTimeout(() => {getApiEmissaoNotas(db)},5000);
+  setTimeout(() => {getApiNotasCanceladas(db)},5000);
+  setTimeout(() => {getApiEmissaoNotas(db)},5000);
   setTimeout(() => {getApiEntregaDivida(db)},5000);
-  //setTimeout(() => {getApiRelatoriodecompras(db)},5000);
+  setTimeout(() => {getApiRelatoriodecompras(db)},5000);
   setTimeout(() => {getFirestoreClientes(db)},5000);
-  //setTimeout(() => {getApiclientes(db)},5000);
+  setTimeout(() => {getApiclientes(db)},5000);
   //await client.close();
 });
 
