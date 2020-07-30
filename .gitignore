@@ -25,3 +25,6 @@ yarn-error.log*
 /.idea/
 /.gitignore
 /.idea/codeStyles/codeStyleConfig.xml
+/sqlanywhere/credentials.json
+/sqlanywhere/prowater-177d3-firebase-adminsdk-o3503-f5bfd1b53c.json
+/sqlanywhere/token.pickle

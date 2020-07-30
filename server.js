@@ -5,11 +5,11 @@ const assert = require('assert');
 const schedule = require('node-schedule');
 const firebaseadmin = require('firebase-admin')
 
+let serviceAccount = require("C:\\Users\\JLGS\\PycharmProjects\\prowater_painel\\sqlanywhere\\prowater-177d3-firebase-adminsdk-o3503-f5bfd1b53c.json");
 firebaseadmin.initializeApp({
-  apiKey: 'AIzaSyDGcf4b5BG9NNV__GQbzTdZ7QJAcOeMyRA',
-  authDomain: 'https://accounts.google.com/o/oauth2/auth',
-  projectId: 'prowater-177d3'
-})
+  credential: firebaseadmin.credential.cert(serviceAccount),
+  databaseURL: "https://prowater-177d3.firebaseio.com"
+});
 
 const firestoredb = firebaseadmin.firestore();
 
@@ -20,6 +20,7 @@ const client = new MongoClient(urlmongo);
 
 const app = express();
 
+//Configurações do nodejs
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   next();
@@ -34,7 +35,7 @@ function getApiRepresentantes(db) {
   axios.post(' http://127.0.0.1:5000/representantes',
   )
   .then((res) => {
-    res.data.forEach(value => {
+    for (const value of res.data){
       db.collection("representantes").update({codigo: value.codigo}, {$set: value},{upsert: true})
         .then(value => {
         //console.log("OK",value)
@@ -42,7 +43,7 @@ function getApiRepresentantes(db) {
         .catch(reason => {
         console.error("Error REP",reason)
       })
-    })
+    }
   })
   .catch((error) => {
     console.error(error)
@@ -55,22 +56,45 @@ function getApiRepresentantes(db) {
 // depois atualiza o registro dele no MongoDB
 /**@param {MongoClient} db Cliente MongoDB*/
 function getApiclientes(db) {
+  let batchWrites = {batch:[firestoredb.batch()], page:0 , limit: 0};
+
   axios.post(' http://127.0.0.1:5000/cliente',
   )
-  .then((res) => {
-    console.log("OK")
-    res.data.forEach(value => {
-      db.collection("clientes").update({codigo: value.codigo}, {$set: value},{upsert: true}).then(value => {
-
-      }).catch(reason => {
-        console.error("Error CLI",reason)
-      })
-    })
-
+  .then(async (res) => {
+    console.log("getApiClientes");
+    for (const value of res.data) {
+      let response = await db.collection("clientes")
+        .findOne({codigo: value.codigo}, {projection: {_id: 0, uptodate: 0}})
+      if (JSON.stringify(value) === JSON.stringify(response)){
+        db.collection("clientes")
+        .findOneAndUpdate(
+          {codigo: value.codigo},
+          [{$set: {uptodate: true}}]
+        )
+        .then(value => {})
+        .catch(reason => {console.error("Error CLI",reason)})
+      } else {
+        value['uptodate'] = false;
+        db.collection("clientes")
+        .findOneAndUpdate(
+          {codigo: value.codigo},
+          [{$set: value}],
+          {upsert: true}
+        )
+        .then( v => {
+          console.log("atualizando");
+          batchWrites.limit+=1;
+          updateClienteFirestore(value, batchWrites);
+        })
+        .catch(reason => {console.error("Error CLI",reason)})
+      }
+    }
   })
   .catch((error) => {
     console.error(error)
   })
+
+  batchWrites.batch[batchWrites.batch.length-1].commit().then(value => {}).catch(reason => {});
 }
 
 //Requisição feita para a API do SQLAnywhere
@@ -262,7 +286,8 @@ function getApiRelatoriodecompras(db) {
 /**@param {MongoClient} mongoClient Cliente MongoDB
  * @param {firestoredb} firestoreDatabase Cliente Firestore
  * @this getFirestoreClientes
- * Sincroniza dados de Clientes do Firebase com a coleção "relatorio_de_compras_firestore"*/
+ * Sincroniza dados de Clientes do Firebase com a coleção "relatorio_de_compras_firestore"
+ * @deprecated Não é mais necessario */
 function getFirestoreClientes(mongoClient, firestoreDatabase){
   firestoredb.collection("clientes")
     .get()
@@ -282,6 +307,7 @@ function getFirestoreClientes(mongoClient, firestoreDatabase){
     })
     .catch(reason => {})
 }
+/** @deprecated Não é mais necessario */
 function getFirestoreCobrancas(db){
   firestoredb.collection("cobrancas_firestore")
     .get()
@@ -299,18 +325,21 @@ function getFirestoreCobrancas(db){
     })
     .catch(reason => {})
 }
+/** @deprecated Não é mais necessario */
 function getFirestoreRepresentantes(db){
   firestoredb.collection("representantes_firestore")
     .get()
     .then(value => {})
     .catch(reason => {})
 }
+/** @deprecated Não é mais necessario */
 function getFirestoreTabeladePreco(db){
   firestoredb.collection("tabela_de_preco_firestore")
     .get()
     .then(value => {})
     .catch(reason => {})
 }
+/** @deprecated Não é mais necessario */
 function getFirestorePedidos(db){
   firestoredb.collection("teste_firestore")
     .get()
@@ -321,51 +350,42 @@ function getFirestorePedidos(db){
 //Conexão com MongoDb
 //Sincroniza com banco de dados SQLAnywhere
 client.connect(async (mongoError) =>{
-  assert.equal(null,mongoError);
+  assert.strictEqual(null,mongoError);
   console.log("Connected to mongodb server");
   const db = client.db(dbname);
-  setTimeout(() => {getApiProducao(db)}, 5000);
-  setTimeout(() => {getApiTabelaPreco(db)},5000);
-  setTimeout(() => {getApiRepresentantes(db);},5000);
-  setTimeout(() => {getApicobrancas(db)},5000);
-  setTimeout(() => {getApiNotasCanceladas(db)},5000);
-  setTimeout(() => {getApiEmissaoNotas(db)},5000);
-  setTimeout(() => {getApiEntregaDivida(db)},5000);
-  setTimeout(() => {getApiRelatoriodecompras(db)},5000);
-  setTimeout(() => {getFirestoreClientes(db)},5000);
+  //setTimeout(() => {getApiProducao(db)}, 5000);
+  //setTimeout(() => {getApiTabelaPreco(db)},5000);
+  //setTimeout(() => {getApiRepresentantes(db);},5000);
+  //setTimeout(() => {getApicobrancas(db)},5000);
+  //setTimeout(() => {getApiNotasCanceladas(db)},5000);
+  //setTimeout(() => {getApiEmissaoNotas(db)},5000);
+  //setTimeout(() => {getApiEntregaDivida(db)},5000);
+  //setTimeout(() => {getApiRelatoriodecompras(db)},5000);
+  //setTimeout(() => {getFirestoreClientes(db)},5000);
   setTimeout(() => {getApiclientes(db)},5000);
   //await client.close();
 });
 
-async function updateFirestoreClientes(cliente, db) {
-  let mongoClientesCollection = db.collection("clientes");
-  try {
-    let firestoreSnapshot = await firestoredb.collection("clientes").get();
-    if (firestoreSnapshot.empty){
-      console.log("Sem Documentos em Clientes");
-    } else {
-      let toUpdate = mongoClientesCollection.find().toArray()
-      firestoreSnapshot.forEach( doc => {
-        toUpdate.push(mongoClientesCollection.find({codigo:doc.data().codigo}));
-        if (doc.data() === mongoClientesCollection.find({codigo:doc.data().codigo})){
-          toUpdate.pop()
-        } else {
-
-        }
-      })
+/** @param batchWrites {{batch:Object},{page:number},{limit:number}} Batch de documentos e quantidade,
+ * @param documento {Object} Documento do cliente */
+async function updateClienteFirestore( documento, batchWrites) {
+  let clienteRef = await firestoredb.collection("clientes").doc(documento.codigo);
+  if (batchWrites.limit < 500) {
+    try {
+      batchWrites.batch[batchWrites.page] = firestoredb.batch().set(clienteRef,documento)
+      console.log("UpdateClienteFirestore: ", batchWrites.limit);
+    }catch (e) {
+      console.log("UpdateClienteFirestore catch:",e);
     }
-  } catch (e) {
+  } else {
+    console.log("Commiting Batch Documents...");
+    batchWrites.page+=1
+    batchWrites.limit = 0;
+    await batchWrites.batch[batchWrites.page-1].commit().then(value => {
+      console.log("Commited Batch Documentes");
+    }).catch(reason => {});
 
   }
-  firestoredb.collection("clientes")
-    .where("codigo", "==", cliente.codigo)
-    .update(body)
-    .then(function (docRef) {
-      console.log("Document: ", docRef.id, " updated");
-    })
-    .catch(function (error) {
-      console.error("Error updating document: ", error);
-    });
 }
 
 //setInterval(() => {getApiProducao(client.db(dbname))}, 3*minuto);

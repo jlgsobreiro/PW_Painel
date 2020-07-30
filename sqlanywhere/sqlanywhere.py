@@ -26,30 +26,32 @@ def extratorcliente(listaclientes: list):
     lista_cliente = []
     for cliente in listaclientes:
         try:
-            tempcliente = {"representante": cliente.REPRE, "zona": cliente.ZONA, "mercado": cliente.MERCADO.strip(),
-                           "rota": cliente.ROTA.strip(), "status": cliente.ST.strip(),
-                           "codigo": cliente.CODIGO,
-                           "fantasia": cliente.FANTASIA.strip(), "razao_social": cliente.AEMPR_RAZAO_SOCIAL.strip(),
-                           "endereco": {"rua": cliente.RUA.strip(), "numero": int(cliente.NUMERO),
-                                        "complemento": cliente.COMPLEMENTO.strip(),
-                                        "bairro": cliente.BAIRRO.strip(),
-                                        "cidade": cliente.CIDADE.strip(), "cep": int(cliente.CEP),
-                                        "uf": cliente.UF},
-                           "telefones": {"fixo": cliente.TELEFONE.strip(), "celular_0": cliente.CELULAR_1.strip(),
-                                         "celular_1": cliente.CELULAR_2.strip(),
-                                         "celular_2": cliente.CELULAR_3.strip()},
-                           "emails": getEmails(codigo=cliente.CODIGO, tipo="C"),
-                           "credito": {"pedido": float(cliente.PEDIDO), "aberto": float(cliente.ABERTO),
-                                       "vencido": float(cliente.VENCIDO),
-                                       "limite": float(cliente.Credito)},
-                           "ultimo_pedido": {"quantidade_caixas": int(cliente.NR_CX), "total": float(cliente.TOT_NOTA),
-                                             "emissao":
-                                                 (cliente.DT_EMISSAO[6:8] + "/" + cliente.DT_EMISSAO[
-                                                                                  4:6] + "/" + cliente.DT_EMISSAO[0:4])},
-                           "tabela_de_preco": {"prowater": cliente.TAB_PW, "proclean": cliente.TAB_PC,
-                                               "prolimp": cliente.TAB_PL},
-                           "condicao_de_pagamento": {"prowater": cliente.PGTOPW, "proclean": cliente.PGTOPC,
-                                                     "prolimp": cliente.PGTOPL}}
+            tempcliente = {
+                "representante": cliente.REPRE, "zona": cliente.ZONA, "mercado": cliente.MERCADO.strip(),
+                "rota": cliente.ROTA.strip(), "status": cliente.ST.strip(),
+                "codigo": cliente.CODIGO,
+                "fantasia": cliente.FANTASIA.strip(), "razao_social": cliente.AEMPR_RAZAO_SOCIAL.strip(),
+                "endereco": {"rua": cliente.RUA.strip(), "numero": int(cliente.NUMERO),
+                             "complemento": cliente.COMPLEMENTO.strip(),
+                             "bairro": cliente.BAIRRO.strip(),
+                             "cidade": cliente.CIDADE.strip(), "cep": int(cliente.CEP),
+                             "uf": cliente.UF},
+                "telefones": {"fixo": cliente.TELEFONE.strip(), "celular_0": cliente.CELULAR_1.strip(),
+                              "celular_1": cliente.CELULAR_2.strip(),
+                              "celular_2": cliente.CELULAR_3.strip()},
+                "emails": getEmails(codigo=cliente.CODIGO, tipo="C"),
+                "credito": {"pedido": float(cliente.PEDIDO), "aberto": float(cliente.ABERTO),
+                            "vencido": float(cliente.VENCIDO),
+                            "limite": float(cliente.Credito)},
+                "ultimo_pedido": {"quantidade_caixas": int(cliente.NR_CX), "total": float(cliente.TOT_NOTA),
+                                  "emissao":
+                                      (cliente.DT_EMISSAO[6:8] + "/" + cliente.DT_EMISSAO[
+                                                                       4:6] + "/" + cliente.DT_EMISSAO[0:4])},
+                "tabela_de_preco": {"prowater": cliente.TAB_PW, "proclean": cliente.TAB_PC,
+                                    "prolimp": cliente.TAB_PL},
+                "condicao_de_pagamento": {"prowater": cliente.PGTOPW, "proclean": cliente.PGTOPC,
+                                          "prolimp": cliente.PGTOPL}
+            }
         except:
             print('erro')
         lista_cliente.append(tempcliente)
