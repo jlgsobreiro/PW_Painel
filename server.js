@@ -81,20 +81,45 @@ function getApiclientes(db) {
           [{$set: value}],
           {upsert: true}
         )
-        .then( v => {
+        .then( async v => {
           console.log("atualizando");
-          batchWrites.limit+=1;
-          updateClienteFirestore(value, batchWrites);
+          let cliente = await firestoredb.collection("clientes").doc(value.codigo).set(value);
+          let tries = 0;
+          while (!cliente && tries < 3){
+            try {
+              let cliente = await firestoredb.collection("clientes").doc(value.codigo).set(value);
+              console.log("Cliente: ",cliente);
+            } catch (e) {
+              tries++;
+              console.log("Erro ao ao enviar documento. Tentativa ",tries,"/3")
+            }
+          }
+
+
+          /*batchWrites.limit+=1;
+          updateClienteFirestore(value, batchWrites).then(async value1 => {
+            if (batchWrites.limit === 0) {
+              await batchWrites.batch[batchWrites.page-1].commit()
+                .then(value => {
+                  console.log("Commited Batch Documentes");
+                })
+                .catch(reason => {
+                  console.error("Error Batch Commit: ",reason);
+                });
+              }
+          }).catch(reason => {
+            console.error("Error Update Cliente Firestore: ",reason)
+          });*/
         })
-        .catch(reason => {console.error("Error CLI",reason)})
+        .catch(reason => {
+          console.error("Error CLI",reason);
+        })
       }
     }
   })
   .catch((error) => {
     console.error(error)
   })
-
-  batchWrites.batch[batchWrites.batch.length-1].commit().then(value => {}).catch(reason => {});
 }
 
 //Requisição feita para a API do SQLAnywhere
@@ -370,7 +395,7 @@ client.connect(async (mongoError) =>{
  * @param documento {Object} Documento do cliente */
 async function updateClienteFirestore( documento, batchWrites) {
   let clienteRef = await firestoredb.collection("clientes").doc(documento.codigo);
-  if (batchWrites.limit < 500) {
+  if (batchWrites.limit <= 2) {
     try {
       batchWrites.batch[batchWrites.page] = firestoredb.batch().set(clienteRef,documento)
       console.log("UpdateClienteFirestore: ", batchWrites.limit);
@@ -378,13 +403,9 @@ async function updateClienteFirestore( documento, batchWrites) {
       console.log("UpdateClienteFirestore catch:",e);
     }
   } else {
-    console.log("Commiting Batch Documents...");
     batchWrites.page+=1
     batchWrites.limit = 0;
-    await batchWrites.batch[batchWrites.page-1].commit().then(value => {
-      console.log("Commited Batch Documentes");
-    }).catch(reason => {});
-
+    console.log("Batch Page Created:", batchWrites.page);
   }
 }
 
