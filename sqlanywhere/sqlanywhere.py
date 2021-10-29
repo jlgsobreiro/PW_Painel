@@ -1,4 +1,3 @@
-import datetime
 import json
 
 from bson import json_util
@@ -8,7 +7,6 @@ from requests.exceptions import Timeout
 import pyodbc
 import queriesSQL as Query
 import pymongo
-import redis
 
 """Retorna email"""
 
