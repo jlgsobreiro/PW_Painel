@@ -1,4 +1,5 @@
-import React from "react";
+import * as dyn from '../dynamodb';
+import React, {useState} from "react";
 import {
   Toast,
   Button,
@@ -10,8 +11,17 @@ import {
   TextInput,
   Icon
 } from "react-materialize"
+import {DataGrid} from '@material-ui/data-grid'
 import * as firebase from 'firebase';
 import Chart from "react-google-charts";
+import Amplify, { Auth } from 'aws-amplify';
+import awsconfig from '../aws-exports';
+import {CircularProgress} from '@material-ui/core';
+import TabelaCobrancas from '../components/TabelaCobrancas';
+import TelaMediaDeCompras from '../components/TabelaMediaDeCompras';
+import TabelaMediaDeCompras from '../components/TabelaMediaDeCompras';
+
+Amplify.configure(awsconfig);
 
 class TelaLogin extends React.Component {
   constructor(props) {
@@ -19,7 +29,7 @@ class TelaLogin extends React.Component {
     this.state = {
       usuario: "",
       senha: "",
-      response: '',
+      response: "",
       firebaseapp: firebase.initializeApp({
         apiKey: 'AIzaSyDGcf4b5BG9NNV__GQbzTdZ7QJAcOeMyRA',
         authDomain: 'https://accounts.google.com/o/oauth2/auth',
@@ -34,19 +44,15 @@ class TelaLogin extends React.Component {
       text:"",
       dataCobranca: [],
       dataProducao: [],
+      nomesTabelasDynamo: [],
+      tabelaCobrancas: {},
     };
     this.handleChangeUser = this.handleChangeUser.bind(this);
     this.handleChangePassword = this.handleChangePassword.bind(this);
   }
 
   componentDidMount() {
-    this.state.firebaseapp.auth().onAuthStateChanged( user => {
-      console.log(user);
-      if (user){
-        this.setState({logged: true});
-        this.consulta();
-      }
-    })
+    this.consultaTabelasDynamoDB();
   }
 
   handleChangeUser (event) {
@@ -57,117 +63,161 @@ class TelaLogin extends React.Component {
     this.setState({senha: event.target.value});
   }
 
-  autenticaUsuario = async (usuario, senha, status) => {
-    this.state.firebaseapp
-      .auth()
-      .signInWithEmailAndPassword(usuario,senha)
-      .then(
-        r => {
+  autenticaUsuario = (usuario, senha) => {
+    Auth.signIn({username: usuario, password: senha})
+        .then(value => {
           window.M.toast({html:"Sucesso", inDuration:600, outDuration: 600, displayLength: 1600});
-          status = true;
-        },
-        r => {
+          this.setState({logged: true});
+        })
+        .catch(reason => {
+          //console.error(reason);
           window.M.toast({html:"Email ou senha incorretos", inDuration:600, outDuration: 600, displayLength: 1600});
-          status = false;
-        }
-      )
-      .catch(function(error) {
-        window.M.toast({html:error, inDuration:600, outDuration: 600, displayLength: 1600});
-        status = false;
-      });
-  };
-
-  callApiClientes = async () => {
-    const response = await fetch('http://127.0.0.1:5000/cliente');
-    const body = await response.json();
-    if (response.status !== 200) throw Error(body.message);
-    window.M.toast({html:"Clientes", inDuration:600, outDuration: 600, displayLength: 1600});
-    const db = this.state.firebaseapp.firestore();
-    for ( var cliente in body) {
-      db.collection("clientes")
-        .add(body[cliente])
-        .then(function (docRef) {
-          console.log("Document written with ID: ", docRef.id);
+          this.setState({logged: false});
+          return false;
         })
-        .catch(function (error) {
-          console.error("Error adding document: ", error);
-        });
-    }
-  };
+  }
 
-  callApiTabelaPreco = async () => {
-    const response = await fetch('http://127.0.0.1:5000/tabela_preco');
-    const body = await response.json();
-    if (response.status !== 200) throw Error(body.message);
-    window.M.toast({html:"Tabela", inDuration:600, outDuration: 600, displayLength: 1600});
-    const db = this.state.firebaseapp.firestore();
-    for ( var produtos in body) {
-      console.log(produtos)
-      db.collection("tabela_de_preco").add(body[produtos])
-        .then(function (docRef) {
-          console.log("Document written with ID: ", docRef.id);
+  logOut = () => {
+    Auth.signOut()
+        .then(value => {
+          this.setState({logged:false})
+          window.M.toast({html:"Até breve", inDuration:600, outDuration: 600, displayLength: 1600});
         })
-        .catch(function (error) {
-          console.error("Error adding document: ", error);
-        });
-    }
-  };
-
-  callApiTabelaRepresentantes = async () => {
-    const response = await fetch('http://127.0.0.1:5000/representantes');
-    const body = await response.json();
-    if (response.status !== 200) throw Error(body.message);
-    window.M.toast({html:"Tabela", inDuration:600, outDuration: 600, displayLength: 1600});
-    const db = this.state.firebaseapp.firestore();
-    for ( var representante in body) {
-      console.log(representante)
-      db.collection("representantes").add(body[representante])
-        .then(function (docRef) {
-          console.log("Document written with ID: ", docRef.id);
+        .catch(reason => {
+          window.M.toast({html:"Erro ao sair", inDuration:600, outDuration: 600, displayLength: 1600});
         })
-        .catch(function (error) {
-          console.error("Error adding document: ", error);
-        });
-    }
-  };
+  }
 
-  carregaCobrancas = async () => {
-    const response = await fetch('http://127.0.0.1:5000/cobrancas');
-    const body = await response.json();
-    if (response.status !== 200) throw Error(body.message);
-    window.M.toast({html:"Cobrancas", inDuration:600, outDuration: 600, displayLength: 1600});
-  };
-
-  addCobrancasFirebase = async (body) => {
-    const db = this.state.firebaseapp.firestore();
-    for ( var cobranca in body) {
-      db.collection("cobrancas")
-        .add(body[cobranca])
-        .then(function (docRef) {
-          console.log("Document written with ID: ", docRef.id);
-        })
-        .catch(function (error) {
-          console.error("Error adding document: ", error);
-        });
-    }
-  };
-
-  updateCobrancasFirebase = async (id, body) => {
-    const db = this.state.firebaseapp.firestore();
-    await db.collection("cobrancas")
-      .where("cliente", "==", id.cliente)
-      .where("pedido", "==", id.pedido)
-      .where( "nota_fiscal", "==", id.nota_fiscal)
-      .where( "empresa", "==", id.empresa)
-      .where( "parcela", "==", id.parcela)
-      .update(body)
-      .then(function (docRef) {
-        console.log("Document: ", docRef.id, " updated");
+  consultaTabelasDynamoDB = () => {
+      dyn.listaTabelas2().then(value => {
+          console.log(value);
+          console.log(value.TableNames);
+          this.setState({nomesTabelasDynamo: value.TableNames});
+      }).catch(reason => {
+          console.error(reason);
       })
-      .catch(function (error) {
-        console.error("Error updating document: ", error);
+
+  }
+
+  consultaListaDeProducao = () => {
+    let formatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
+    const titles = [
+      {cabecalho: 'id', tamanho: 50, hide: true, tipo: "number"},
+      {cabecalho: 'Numero_OP', tamanho: 150, hide: false, tipo: "number"},
+      {cabecalho: 'Item', tamanho: 400, hide: false, tipo: "string"},
+      {cabecalho: 'Estimado', tamanho: 120, hide: false, tipo: "number"},
+      {cabecalho: 'Emissao', tamanho: 120, hide: false, tipo: "datetime"},
+      {cabecalho: 'Estado', tamanho: 120, hide: false, tipo: "string"},
+      {cabecalho: 'Diferenca', tamanho: 120, hide: false, tipo: "number"},
+      {cabecalho: 'Efetuado', tamanho: 120, hide: false, tipo: "number"},
+      {cabecalho: 'Input', tamanho: 120, hide: false, tipo: "number"},
+    ];
+    let colunas = [];
+    let body = [];
+    for (let titulo in titles) {
+      colunas.push({
+        field: titles[titulo].cabecalho,
+        headerName: titles[titulo].cabecalho,
+        width: titles[titulo].tamanho,
+        hide: titles[titulo].hide
       });
-  };
+      fetch('http://127.0.0.1:5001/api/producao')
+          .then(res => res.json())
+          .then(value => {
+            if (value) {
+              for (let cob in value) {
+                let doc = value[cob];
+                if (doc !== undefined) {
+                  let data_emissao = new Date(doc.data_emissao.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"))
+                  let item = {
+                    id: cob,
+                    Numero_OP: doc.numero_op,
+                    Estimado: doc.a_fabricar,
+                    Emissao: data_emissao.toISOString()
+                        .replace(/(\d{4})-(\d{2})-(\d{2})/, "$1/$2/$3")
+                        .substring(0, 10),
+                    Diferenca: doc.diferenca,
+                    Efetuado: doc.efetuado,
+                    Fabricado: doc.fabricado,
+                    Item: doc.item,
+                    Estado: doc.status
+                  }
+                  body.push(item);
+                  //console.log(item);
+                }
+              }
+            }
+            this.setState({dataProducao: {rows: body, col: colunas}})
+            this.setState({currentWindow: "Producao"});
+          })
+          .catch(reason => {
+            console.error(reason)
+          })
+    }
+  }
+
+  consultaTabelaDeProdutos = () => {
+    let formatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
+    const titles = [
+      {cabecalho: 'id', tamanho: 50, hide: true, tipo: "number"},
+      {cabecalho: 'Empresa', tamanho: 150, hide: false, tipo: "number"},
+      {cabecalho: 'Codigo', tamanho: 400, hide: false, tipo: "string"},
+      {cabecalho: 'Descricao', tamanho: 120, hide: false, tipo: "number"},
+      {cabecalho: 'Data_Inicial', tamanho: 120, hide: false, tipo: "datetime"},
+      {cabecalho: 'Data_Final', tamanho: 120, hide: false, tipo: "string"},
+      {cabecalho: 'Valor', tamanho: 120, hide: false, tipo: "number"},
+    ];
+    let colunas = [];
+    let body = [];
+    for (let titulo in titles) {
+      colunas.push({
+        field: titles[titulo].cabecalho,
+        headerName: titles[titulo].cabecalho,
+        width: titles[titulo].tamanho,
+        hide: titles[titulo].hide
+      });
+      fetch('http://127.0.0.1:5001/api/producao')
+          .then(res => res.json())
+          .then(value => {
+            if (value) {
+              for (let cob in value) {
+                let doc = value[cob];
+                if (doc !== undefined) {
+                  let data_inicial = new Date(doc.data_inicial.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"))
+                  let data_final = new Date(doc.data_inicial.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"))
+                  let item = {
+                    id: cob,
+                    Empresa: doc.empresa,
+                    Codigo: doc.codigo,
+                    Descricao: doc.descricao,
+                    Data_inicial: doc.data_inicial.toISOString()
+                        .replace(/(\d{4})-(\d{2})-(\d{2})/, "$1/$2/$3")
+                        .substring(0, 10),
+                    Data_final: doc.data_final,
+                    Valor: doc.efetuado,
+                    Fabricado: doc.fabricado,
+                    Item: doc.item,
+                    Estado: doc.status
+                  }
+                  body.push(item);
+                  //console.log(item);
+                }
+              }
+            }
+            this.setState({dataProducao: {rows: body, col: colunas}})
+            this.setState({currentWindow: "Producao"});
+          })
+          .catch(reason => {
+            console.error(reason)
+          })
+    }
+  }
 
   checaPrazo(prazo){
     let sete = (prazo["seteDias"] ? "7/" : "");
@@ -182,54 +232,29 @@ class TelaLogin extends React.Component {
 
   }
 
-  logOut = async () => {
-    await this.state.firebaseapp.auth().signOut().then(r => {
-      this.setState({logged:false})
-    });
-  }
-
   mostraTabelaPedido = () => {
     this.setState({currentWindow: "Pedidos"})
   };
 
   mostraTabelaCobranca = () => {
+    //this.setState({currentWindow: "Loading"});
     this.setState({currentWindow: "Cobrancas"});
-    this.consultaListaDeCobranca();
+    //this.consultaListaDeCobranca();
+    //console.log(this.state.dataCobranca);
   };
 
   mostraTabelaProducao = () => {
-    this.setState({currentWindow: "Producao"});
+    this.setState({currentWindow: "Loading"});
     this.consultaListaDeProducao();
   };
 
-  consulta = async () =>{
-    let listaDePedidos = [];
-    const db = await this.state.firebaseapp.firestore();
-    db.collection("teste").orderBy("data", "desc").get().then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        listaDePedidos.push({id:doc.id,data:doc.data()});
-      });
-    });
-    this.setState({dataTable: listaDePedidos});
+  mostraTabelaMediaDeCompras = () => {
+    this.setState({currentWindow: "MediaDeCompras"});
   };
 
-  consultaListaDeCobranca = async () => {
-    let listaDeClientes = [];
-    const db = await this.state.firebaseapp.firestore();
-    await db
-      .collection("cobrancas")
-      .get()
-      .then(querySnapShot => {
-        querySnapShot.forEach(doc => {
-          listaDeClientes.push({ id: doc.id, data: doc.data() });
-        });
-        //console.log("Lista Cob", listaDeClientes);
-      })
-      .catch(error => {
-        console.log("Deu ruim", error);
-      });
-    this.setState({dataCobranca: listaDeClientes}) ;
-  };
+  mostraDynamoDB = () => {
+      this.setState({currentWindow: "DynamoDB"});
+  }
 
   insereCodigoPedido = async (id, codigo) => {
     const db = await this.state.firebaseapp.firestore();
@@ -238,7 +263,7 @@ class TelaLogin extends React.Component {
       .update({codigoPedido: codigo})
       .then(() => {
         window.M.toast({html:"Sucesso", inDuration:600, outDuration: 600, displayLength: 1600});
-       this.consulta();
+       //this.consulta();
       }).catch((error) => {
         console.error("Erro ao escrever no documento",error);
     });
@@ -269,10 +294,7 @@ class TelaLogin extends React.Component {
                 style={{width:"100%"}} type="submit"
                 className="waves-effect waves-light btn"
                 onClick={() => {
-                  let logged = false;
-                  this.autenticaUsuario(this.state.usuario, this.state.senha,logged);
-                  this.setState({logged: logged}
-                  );
+                  this.autenticaUsuario(this.state.usuario, this.state.senha);
                 }}
               >
                 Login
@@ -297,6 +319,20 @@ class TelaLogin extends React.Component {
         }}
       >
         {label}
+      </Button>
+    )
+  }
+
+  BotaoLateralv2 (props) {
+     return (
+      <Button
+        style={styles.botaoLateral}
+        className="waves-effect waves-light btn blue"
+        onClick={() => {
+          this.setState({currentWindow: props.tela})
+        }}
+      >
+        {props.label}
       </Button>
     )
   }
@@ -333,6 +369,21 @@ class TelaLogin extends React.Component {
         </tbody>
       </Table>
     );
+  }
+  MakeDataGrid = (dataPlanilha) => {
+    console.log(dataPlanilha);
+    try {
+     return (
+         <DataGrid
+             columns={dataPlanilha.col}
+             rows={dataPlanilha.rows}
+             pageSize={10}
+             rowsPerPageOptions={[10, 25, 50,dataPlanilha.rows.length]}
+         />)
+    } catch (e) {
+      console.log("Erro"+e);
+      return (<DataGrid columns={["Carregando"]} rows={["Carregando"]} pageSize={25}  />)
+    }
   }
 
   TabelaPedidos (indice, quantidade) {
@@ -432,107 +483,11 @@ class TelaLogin extends React.Component {
         )
   }
 
-  TabelaDeCobranca () {
-    let titles = ["Representante", "Empresa", "Cliente", "Pedido", "Nota", "Parcela", "Emissao", "Vencimento", "Valor",
-      "Juros", "Dias", "Total"];
-    let head = [];
-    let body = [];
-    let cobrancas = this.state.dataCobranca.sort((a, b) => { return a.data.vencimento - b.data.vencimento });
-    const tempo_ms = 1000 * 60 * 60 * 24;
-    let hoje = new Date();
-    head.push(
-      this.make_row([
-        this.make_col_title(titles[0]),
-        this.make_col_title(titles[1]),
-        this.make_col_title(titles[2]),
-        this.make_col_title(titles[3]),
-        this.make_col_title(titles[4]),
-        this.make_col_title(titles[5]),
-        this.make_col_title(titles[6]),
-        this.make_col_title(titles[7]),
-        this.make_col_title(titles[8]),
-        this.make_col_title(titles[9]),
-        this.make_col_title(titles[10]),
-        this.make_col_title(titles[11]),
-      ])
-    );
-    console.log(cobrancas);
-    cobrancas.forEach(doc => {
-      let data_vencimento;
-      try {
-        data_vencimento = new Date(doc.data.vencimento.substr(6, 4) +
-          "-" +
-          doc.data.vencimento.substr(3, 2) +
-          "-" +
-          doc.data.vencimento.substr(0, 2));
-          } catch (e) {
-          console.log("erro",e);
-          }
-          let dias_vencidos = Math.floor((hoje - data_vencimento) / tempo_ms);
-      body.push(
-        this.make_row([
-          this.make_col(doc.data.representante),
-          this.make_col(doc.data.empresa),
-          this.make_col(doc.data.cliente),
-          this.make_col(doc.data.pedido),
-          this.make_col(doc.data.nota_fiscal),
-          this.make_col(doc.data.parcela),
-          this.make_col(doc.data.emissao),
-          this.make_col(doc.data.vencimento),
-          this.make_col("R$ "+doc.data.valor),
-          this.make_col("R$ "+(doc.data.valor*0.004*dias_vencidos).toFixed(2)),
-          this.make_col(dias_vencidos),
-          this.make_col("R$ "+(doc.data.valor+doc.data.valor*0.004*dias_vencidos).toFixed(2)),
-        ]))
-    });
-    return this.make_table(head,body);
-  };
-
-  consultaListaDeProducao = async() => {
-    try {
-      let response = await fetch(
-        'http://127.0.0.1:5001/api/producao'
+  DynamoDBPainel() {
+      return (
+          <h1>{this.state.nomesTabelasDynamo}</h1>
       );
-      let json = await response.json()
-      this.setState({dataProducao: json})
-    } catch (e) {
-      console.error(e)
-    }
-
   }
-
-  TabelaDeProducao () {
-    let titles = ["numero_op", "item", "data_emissao", "status", "a_fabricar", "fabricado", "diferenca", "efetuado"]
-    let head = [];
-    let body = [];
-    let producao = this.state.dataProducao
-
-     head.push(
-      this.make_row([
-        this.make_col_title(titles[0]),
-        this.make_col_title(titles[1]),
-        this.make_col_title(titles[2]),
-        this.make_col_title(titles[3]),
-        this.make_col_title(titles[4]),
-        this.make_col_title(titles[5]),
-        this.make_col_title(titles[6]),
-        this.make_col_title(titles[7]),
-      ])
-    );
-    producao.forEach(doc => {
-      body.push(this.make_row([
-       this.make_col(doc.numero_op),
-     this.make_col(doc.item),
-     this.make_col(doc.data_emissao),
-     this.make_col(doc.status),
-     this.make_col(doc.a_fabricar),
-     this.make_col(doc.fabricado),
-     this.make_col(-1*doc.diferenca),
-     this.make_col((100*doc.efetuado).toFixed(2)+"%")
-     ]))
-    });
-     return this.make_table(head,body);
-  };
 
   Painel() {
     return (
@@ -582,22 +537,26 @@ class TelaLogin extends React.Component {
           </a>
           </div>
           <div style={{backgroundColor: "white",height: "1px",width: "80%",paddingLeft: "20px",marginLeft: "20px",marginBottom: "5px"}}/>
+          {/*this.BotaoLateralv2({tela:"Pedidos",label:"Pedidos"})*/}
           {this.BotaoLateral("Pedidos",this.mostraTabelaPedido)}
           {this.BotaoLateral("Cobrancas", this.mostraTabelaCobranca)}
           {/*this.BotaoLateral("Clientes", this.callApiClientes)*/}
           {this.BotaoLateral("Produção", this.mostraTabelaProducao)}
+          {this.BotaoLateral("Média Compras", this.mostraTabelaMediaDeCompras)}
           {this.BotaoLateral("Sair",this.logOut)}
           </div>
-          <div style={{flex:1, overflowY: "scroll"}}>
+          <div style={{flex:1}}>
+          {this.state.currentWindow === "Loading" && (<CircularProgress/>)}
           {this.state.currentWindow === "Painel" && this.Painel()}
           {this.state.currentWindow === "Pedidos" && this.TabelaPedidos(0, 8).tabela}
-          {this.state.currentWindow === "Cobrancas" && this.TabelaDeCobranca()}
-          {this.state.currentWindow === "Producao" && this.TabelaDeProducao()}
+          {this.state.currentWindow === "Cobrancas" && (<TabelaCobrancas/>)}
+          {this.state.currentWindow === "Producao" && this.MakeDataGrid(this.state.dataProducao)}
+          {this.state.currentWindow === "DynamoDB" && this.DynamoDBPainel()}
+          {this.state.currentWindow === "MediaDeCompras" && <TabelaMediaDeCompras/>}
           </div>
           </div>
     );
   }
-
 }
   const styles = {
     mouseOverStyle: {
@@ -620,3 +579,4 @@ class TelaLogin extends React.Component {
     },
   };
   export default TelaLogin;
+

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <table class="table-striped">
+        <thead>
+          <tr>
+              <th>Codigo</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Unidade</th>
+              <th>Total</th>
+              <th>Apagar</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+                <tr>
+                <td>{{ produto['codigo'] }}</td>
+                    <td class="row">
+                        <img class="materialboxed" data-caption="{{ produto['descricao'] }}" height="64px" src="../static/images/{{ produto['codigo'] }}.png">
+                        {{ produto['descricao'] }}
+                    </td>
+                    <td class="">
+                        <label for="quantidade-{{ produto['id'] }}">Quantidade</label>
+                        <input class="qtd" type="number" id="quantidade-{{ produto['id'] }}" onchange="handler('quantidade',{{ produto['id'] }})" value="0">
+                        <span class="hide" id="{{ produto['codigo'] }}">0</span>
+                    </td>
+                    <td>
+                        <label for="unidade-{{ produto['id'] }}">Valor un</label>
+                        <input class="valor" type="number" id="unidade-{{ produto['id'] }}" value="{{ "%0.2f"|format(produto['valor']|float) }}" onchange="handler('unidade',{{ produto['id'] }})" >
+                    </td>
+                    <td class="row">
+                        <span id="total-{{ produto['id'] }}">
+                        </span>
+                        <span id="desconto-{{ produto['id'] }}"></span>
+                    </td>
+                <td>
+                    <i class="material-icons prefix" style="color: red" onclick="zerar({{ produto['id'] }})">close</i>
+                </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><span>Total</span></td>
+                <td><span id="total_final"></span></td>
+                <td><span>Desconto</span></td>
+                <td><span id="desconto_final"></span></td>
+            </tr>
+        </tfoot>
+      </table>
+    <a class="waves-effect waves-light btn modal-trigger" style="width: 100%" href="#modal1">Resumo</a>
+    <div id="modal1" class="modal">
+        <div class="modal-content">
+            <h4>Modal Header</h4>
+            <p>A bunch of text</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-green btn-flat">Enviar</a>
+        </div>
+      </div>
+{% endblock %}

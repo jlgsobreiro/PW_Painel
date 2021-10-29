@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block nav %}
+    <div style="background-color: #2a5788">
+        <div class="nav-wrapper">
+            <div class="row">
+                <div class="input-field col l6 m12 s12">
+                    <i class="material-icons prefix" style="color: white">assignment_ind</i>
+                    <input class="validate representante" id="representante" type="text" style="color: white" data-mask="00000" onchange="handler_cliente()">
+                    <label for="representante" style="color: white">Representante</label>
+                </div>
+                <div class="input-field col l6 m12 s12">
+                    <i class="material-icons prefix" style="color: white">shopping_cart</i>
+                    <input class="validate cliente" id="cliente" type="text" style="color: white" onchange="handler_cliente()">
+                    <label for="cliente" style="color: white">Cliente</label>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <ul class="collapsible">
+        <li>
+          <div id="atrasado_header" class="collapsible-header hide"><i class="material-icons">payment</i>Cobranças</div>
+          <div id="atrasado_body" class="collapsible-body">
+              <table class="striped">
+                  <thead>
+                      <tr>
+                          <th>Nota</th>
+                          <th>Vencimento</th>
+                          <th>Valor</th>
+                          <th>Valor + Juros</th>
+                      </tr>
+                  </thead>
+                  <tbody id="linha_atrasado">
+
+                  </tbody>
+              </table>
+          </div>
+        </li>
+    </ul>
+    <div class="divider"></div>
+    <table class="striped">
+        <thead>
+          <tr>
+              <th>Codigo</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Unidade</th>
+              <th>Total</th>
+              <th>Apagar</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for produto in produtos %}
+                <tr>
+                <td>{{ produto['codigo'] }}</td>
+                    <td class="row">
+                        <img class="materialboxed" data-caption="{{ produto['descricao'] }}" height="64px" src="../static/images/{{ produto['codigo'] }}.png">
+                        {{ produto['descricao'] }}
+                    </td>
+                    <td class="">
+                        <label for="quantidade-{{ produto['id'] }}">Quantidade</label>
+                        <input class="qtd" type="number" id="quantidade-{{ produto['id'] }}" onchange="handler('quantidade',{{ produto['id'] }})" value="0">
+                        <span class="hide" id="{{ produto['codigo'] }}">0</span>
+                    </td>
+                    <td>
+                        <label for="unidade-{{ produto['id'] }}">Valor un</label>
+                        <input class="valor" type="number" id="unidade-{{ produto['id'] }}" value="{{ "%0.2f"|format(produto['valor']|float) }}" onchange="handler('unidade',{{ produto['id'] }})" >
+                    </td>
+                    <td class="row">
+                        <span id="total-{{ produto['id'] }}">
+                        </span>
+                        <span id="desconto-{{ produto['id'] }}"></span>
+                    </td>
+                <td>
+                    <i class="material-icons prefix" style="color: red" onclick="zerar({{ produto['id'] }})">close</i>
+                </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><span>Total</span></td>
+                <td><span id="total_final"></span></td>
+                <td><span>Desconto</span></td>
+                <td><span id="desconto_final"></span></td>
+            </tr>
+        </tfoot>
+      </table>
+    <a id="modal" class="waves-effect waves-light btn modal-trigger disabled" style="width: 100%; height: 128px; text-align: center; margin-bottom: 12px" href="#modal1" onclick="resumo()"><h1>Resumo</h1></a>
+    <div id="modal1" class="modal">
+        <div class="modal-content">
+            <h4>Resumo</h4>
+            <div class="row">
+                <h6 class="col l6 m6 s6" id="representante_resumo"></h6>
+                <h6 class="col l6 m6 s6" id="cliente_resumo"></h6>
+            </div>
+            <table class="striped">
+                <thead>
+                <tr>
+                    <th>Codigo</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Valor un</th>
+                    <th>Valor total</th>
+                </tr>
+                </thead>
+                <tbody id="linha_resumo"></tbody>
+                <tfoot id="final_resumo"></tfoot>
+            </table>
+            <div class="row">
+                <form class="col s12">
+                    <div class="row">
+                        <h6 class="col s2 m2 l2"><b>Data entrega: </b></h6>
+                        <input type="text" class="datepicker col s2 m2 l2" id="entrega" value="Imediata">
+                    </div>
+                    <div class="row">
+                        <div class="col s12 m12 l12">
+                            <label class="col s2 m2 l2">
+                                <input type="checkbox" id="pag0" onchange="forma_de_pagamento()"/>
+                                <span>À vista</span>
+                            </label>
+                            <label class="col s2 m2 l2">
+                                <input type="checkbox"  id="pag7" onchange="forma_de_pagamento()"/>
+                                <span>7</span>
+                            </label>
+                            <label class="col s2 m2 l2">
+                                <input type="checkbox"  id="pag14" onchange="forma_de_pagamento()"/>
+                                <span>14</span>
+                            </label>
+                            <label class="col s2 m2 l2">
+                                <input type="checkbox"  id="pag21" onchange="forma_de_pagamento()"/>
+                                <span>21</span>
+                            </label>
+                            <label class="col s2 m2 l2">
+                                <input type="checkbox"  id="pag28" onchange="forma_de_pagamento()"/>
+                                <span>28</span>
+                            </label>
+                            <label class="col s2 m2 l2">
+                                <input type="checkbox"  id="pag35" onchange="forma_de_pagamento()"/>
+                                <span>35</span>
+                            </label>
+                        </div>
+                        <div class="input-field col s12">
+                            <textarea id="observacoes" class="materialize-textarea"></textarea>
+                            <label for="observacoes">Observações</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-green btn-flat" onclick="cria_pdf()">Enviar</a>
+        </div>
+    </div>
+{% endblock %}

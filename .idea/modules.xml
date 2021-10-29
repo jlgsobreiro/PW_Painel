@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/prowater_painel.iml" filepath="$PROJECT_DIR$/.idea/prowater_painel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sqlanywhere/.idea/sqlanywhere.iml" filepath="$PROJECT_DIR$/sqlanywhere/.idea/sqlanywhere.iml" />
     </modules>
   </component>
 </project>

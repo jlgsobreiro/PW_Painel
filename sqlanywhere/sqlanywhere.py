@@ -1,14 +1,20 @@
+import datetime
+import json
+
+from bson import json_util
+from bson.json_util import loads, dumps
 import requests
 from requests.exceptions import Timeout
 import pyodbc
 import queriesSQL as Query
+import pymongo
 import redis
 
 """Retorna email"""
 
 
 def getEmails(codigo: any, tipo: str):
-    conn = pyodbc.connect(Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     emails = conn.cursor().execute(Query.emailporcodigo(codigo, tipo))
     lista_emails = []
     for enderecos in emails:
@@ -21,6 +27,16 @@ def getEmails(codigo: any, tipo: str):
 '''Colecao de Clientes'''
 
 
+def clientefantasia(codigo):
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    tabela = conn.cursor().execute(f"SELECT AEMPR_NOME_ABREV as FANT FROM SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_CODIGO = {codigo}")
+    fantasia = ''
+    for cli in tabela:
+        fantasia = cli.FANT.strip()
+    conn.close()
+    return fantasia
+
+
 def extratorcliente(listaclientes: list):
     tempcliente = {}
     lista_cliente = []
@@ -28,7 +44,7 @@ def extratorcliente(listaclientes: list):
         try:
             tempcliente = {
                 "representante": cliente.REPRE, "zona": cliente.ZONA, "mercado": cliente.MERCADO.strip(),
-                "rota": cliente.ROTA.strip(), "status": cliente.ST.strip(),
+                "rota": cliente.ROTA.strip(), "estado": cliente.ST.strip(),
                 "codigo": cliente.CODIGO,
                 "fantasia": cliente.FANTASIA.strip(), "razao_social": cliente.AEMPR_RAZAO_SOCIAL.strip(),
                 "endereco": {"rua": cliente.RUA.strip(), "numero": int(cliente.NUMERO),
@@ -43,14 +59,14 @@ def extratorcliente(listaclientes: list):
                 "credito": {"pedido": float(cliente.PEDIDO), "aberto": float(cliente.ABERTO),
                             "vencido": float(cliente.VENCIDO),
                             "limite": float(cliente.Credito)},
-                "ultimo_pedido": {"quantidade_caixas": int(cliente.NR_CX), "total": float(cliente.TOT_NOTA),
+                "ultimo_pedido": {"quantidade_caixas": int(cliente.NR_CX), "total_nota": float(cliente.TOT_NOTA),
                                   "emissao":
                                       (cliente.DT_EMISSAO[6:8] + "/" + cliente.DT_EMISSAO[
                                                                        4:6] + "/" + cliente.DT_EMISSAO[0:4])},
                 "tabela_de_preco": {"prowater": cliente.TAB_PW, "proclean": cliente.TAB_PC,
-                                    "prolimp": cliente.TAB_PL},
+                                    "prolimp": cliente.TAB_PL, "pronew": cliente.TAB_PN},
                 "condicao_de_pagamento": {"prowater": cliente.PGTOPW, "proclean": cliente.PGTOPC,
-                                          "prolimp": cliente.PGTOPL}
+                                          "prolimp": cliente.PGTOPL, "pronew": cliente.PGTOPN}
             }
         except:
             print('erro')
@@ -67,7 +83,7 @@ def clientes(**kwargs):
     lista_clientes = None
     if clientes is None:
         conn = pyodbc.connect(
-            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
         for query in Query.clientes():
             lista_clientes = conn.cursor().execute(query)
         resultado = extratorcliente(lista_clientes)
@@ -75,15 +91,15 @@ def clientes(**kwargs):
         return resultado
     elif isinstance(clientes, str):
         conn = pyodbc.connect(
-            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
         for query in Query.clienteporcodigo(clientes):
             lista_clientes = conn.cursor().execute(query)
-        resultado = extratorcliente(lista_clientes)
+        resultado = extratorcliente([lista_clientes])
         conn.close()
         return resultado
     elif isinstance(clientes, list):
         conn = pyodbc.connect(
-            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
         lista_clientes = []
         for query in Query.clienteporcodigo(0)[0:18]:
             conn.cursor().execute(query)
@@ -99,7 +115,7 @@ def clientes(**kwargs):
 
 def tabelaprecos():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     tabela_preco = conn.cursor().execute(Query.tabelaprecos())
     lista_tabela_preco = []
     for item in tabela_preco:
@@ -107,6 +123,25 @@ def tabelaprecos():
         lista_tabela_preco.append(temp)
     conn.close()
     return lista_tabela_preco
+
+
+def tabelaprecosfinal():
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    tabela_preco = conn.cursor().execute(Query.tabelaprecosfinal())
+    lista_tabela_preco_final = []
+    for item in tabela_preco:
+        temp = {
+            "empresa": item.EMPRESA,
+            "codigo": str(item.ITEM).strip(),
+            "descricao": str(item.DESC).strip(),
+            "data_inicial": item.DATA_I,
+            "data_final": item.DATA_F,
+            "valor": float(item.VALOR)
+        }
+        lista_tabela_preco_final.append(temp)
+    conn.close()
+    return lista_tabela_preco_final
 
 
 def extratorcobranca(tabelacobrancas):
@@ -121,22 +156,23 @@ def extratorcobranca(tabelacobrancas):
 
 def cobrancas():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     tabelacobrancas = conn.cursor().execute(Query.cobrancas())
     resultado = extratorcobranca(tabelacobrancas)
     conn.close()
     return resultado
 
 
-def selecionaCobranca(**kwargs):
+def selecionaCobranca(tabelacobrancas, **kwargs):
     cliente = kwargs.get("cliente")
     empresa = kwargs.get("empresa")
     pedido = kwargs.get("pedido")
     nota_fiscal = kwargs.get("nota_fiscal")
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
-    tabelacobrancas = conn.cursor().execute(
-        Query.cobrancasporargumentos(cliente=cliente, empresa=empresa, pedido=pedido, nota_fiscal=nota_fiscal))
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    if tabelacobrancas is None:
+        tabelacobrancas = conn.cursor().execute(
+            Query.cobrancasporargumentos(cliente=cliente, empresa=empresa, pedido=pedido, nota_fiscal=nota_fiscal))
     resultado = extratorcobranca(tabelacobrancas)
     conn.close()
     return resultado
@@ -144,7 +180,7 @@ def selecionaCobranca(**kwargs):
 
 def representantes():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     representantes = conn.cursor().execute(Query.representantes())
     lista_de_representantes = []
     for item in representantes:
@@ -155,9 +191,20 @@ def representantes():
     return lista_de_representantes
 
 
+def representante(codigo):
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    repre = conn.cursor().execute(Query.representante(codigo))
+    for item in repre:
+        temp = {"codigo": item.COD, "razao_social": item.RAZAO, "fantasia": item.FANT,
+                "email": getEmails(item.COD, tipo="R")}
+    conn.close()
+    return temp
+
+
 def entregadivida():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.entregadivida():
         consultas = conn.cursor().execute(query)
@@ -175,14 +222,14 @@ def entregadivida():
 
 def notascanceladasemotivo():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.notascanceladasemotivo():
         consultas = conn.cursor().execute(query)
     lista_notas_canceladas_e_motivo = []
     for item in consultas:
         temp = {"empresa": item.EMPRESA, "representante": item.REPRE, "rota": item.ROTA, "cliente": item.CLIENTE,
-                "fantasia": item.FANTASIA, "nff": item.NFF, "data_emissao": item.DATA_EMISSAO, "total": float(item.TOT),
+                "fantasia": item.FANTASIA, "nff": item.NFF, "data_emissao": item.DATA_EMISSAO, "valor": float(item.TOT),
                 "caixas": int(item.CX), "transporte": item.TRANSP, "nome_transporte": item.TRANSP_NOME,
                 "motivo": item.MOTIVO}
         lista_notas_canceladas_e_motivo.append(temp)
@@ -192,7 +239,7 @@ def notascanceladasemotivo():
 
 def emissaodenotasfiscais():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.emissaonotasfiscais():
         consultas = conn.cursor().execute(query)
@@ -215,11 +262,11 @@ def emissaodenotasfiscais():
 
 def producao():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = conn.cursor().execute(Query.producao())
     lista_producao = []
     for item in consultas:
-        temp = {"numero_op": item.NUM_OP, "item": item.ITEM, "data_emissao": item.DT_EMISSAO, "status": item.ST,
+        temp = {"numero_op": item.NUM_OP, "item": item.ITEM, "data_emissao": item.DT_EMISSAO, "estado": item.ST,
                 "a_fabricar": int(item.A_FABRICAR), "fabricado": int(item.FABRICADO), "diferenca": int(item.DIFERENCA),
                 "efetuado": float(item.EFETUADO)}
         lista_producao.append(temp)
@@ -229,7 +276,7 @@ def producao():
 
 def relatoriodecompras():
     conn = pyodbc.connect(
-        Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.relatoriodecompas():
         consultas = conn.cursor().execute(query)
@@ -238,7 +285,7 @@ def relatoriodecompras():
         temp = {"representante": item.REPRE, "zona": item.ZONA.strip(), "rota": item.ROTA.strip(),
                 "tempo_pedido": int(item.PED),
                 "tempo_faturado": int(item.FAT), "data_faturamento": item.DT_FAT, "total_valor": float(item.VLR_NF),
-                "total_caixas": int(item.NR_CX), "cobrancas": int(item.COB), "status": item.ST, "codigo": item.CODIGO,
+                "total_caixas": int(item.NR_CX), "cobrancas": int(item.COB), "estado": item.ST, "codigo": item.CODIGO,
                 "fantasia": item.FANTASIA.strip(), "razao_social": item.RAZAO_SOCIAL.strip(), "cnpj_cpf": item.CNPJ_CPF,
                 "email": item.EMAIL,
                 "contato": item.CONTATO.strip(), "celular": item.CELULAR.strip(), "telefone": item.TELEFONE.strip(),
@@ -249,7 +296,250 @@ def relatoriodecompras():
     return lista_clientes
 
 
+def itenspedidos():
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.itenspedidos():
+        consultas = conn.cursor().execute(query)
+    pedidos_faturados = []
+    for item in consultas:
+        temp = {"empresa": item.EMPRESA, "representante": item.REPRE, "rota": item.ROTA, "zona": item.ZONA,
+                "mercado": item.MERCADO, "cliente": item.CLI, "pedido": item.PEDIDO, "data_cadastro": item.CADAST,
+                "tipo": item.TIPO, "produto": item.COD_ITEM, "quantidade": int(item.QTD),
+                "valor_unitario": float(item.VALOR_UN), "valor_total": float(item.TOTAL)
+                }
+        pedidos_faturados.append(temp)
+    conn.close()
+    return pedidos_faturados
+
+
+def pedidosabertos():
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.pedidosabertos():
+        consultas = conn.cursor().execute(query)
+    pedidos_cadastrados = []
+    for item in consultas:
+        temp = {"representante": item.REPRE, "zona": item.ZONA, "mercado": item.MERCADO, "rota": item.ROTA,
+                "cliente": item.CLIENTE,
+                "fantasia": item.FANTASIA, "cadastro": item.CADAST, "previsao": item.PREV, "empresa": item.EMPRESA,
+                "reperesentante_pedido": item.REPRE_PED,
+                "pedido": item.PEDIDO, "tipo": item.TIPO, "condicao_pagamento": int(item.COND_PGTO),
+                "prazo": item.PRAZO,
+                "valor": float(item.VALOR),
+                "caixas": int(item.CX), "peso": int(item.PESO), "vencimento": item.VENCIMENTO,
+                "boletos_a_vencer": float(item.BL_A_Vencer),
+                "boletos_atrasado": float(item.BL_Atrasado), "saldo": float(item.Saldo)}
+        pedidos_cadastrados.append(temp)
+    conn.close()
+    return pedidos_cadastrados
+
+
+def quantidadefathistorico(**kwargs):
+    cliente = kwargs.get("cliente")
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    consultas = conn.cursor().execute(Query.contaconotas(cliente=cliente))
+    res = None
+    for item in consultas:
+        print(f"{cliente} : {int(item.NOTA)}")
+        res = int(item.NOTA)
+    return res
+
+
+def historicofaturamento(conn: pyodbc.Cursor, **kwargs):
+    cliente = kwargs.get("cliente")
+    notaf = kwargs.get("nota")
+    top = kwargs.get("top")
+    consultas = None
+    fecha_conn = False
+    if conn is None:
+        fecha_conn = True
+        conn = pyodbc.connect(
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        for query in Query.historiconotas(cliente=cliente, nota=notaf, top=top):
+            consultas = conn.cursor().execute(query)
+    else:
+        consultas = conn.execute(f"select * from #res where CLIENTE = {cliente}")
+    notas = []
+    nota = {"nota": None, "data": None, "bonificacao": False, "total_nota": 0, "produtos": []}
+    if consultas is None:
+        return notas
+    for item in consultas:
+        if item is None:
+            return None
+        tabela = item.TABELA
+        if tabela is None:
+            tabela = 0
+        temp = {"produto": str(item.PRODUTO).strip(), "quantidade": int(item.QTD),
+                "total_linha": float(item.TOT_PRODUTO),
+                "tabela": float(tabela)}
+        if nota.get("nota") == item.NOTA:
+            nota.get("produtos").append(temp)
+        else:
+            if nota.get("nota") is not None:
+                notas.append(nota)
+            nota = {"nota": item.NOTA, "data": item.PERIODO, "bonificacao": item.NF_NB[:2] == "NB",
+                    "total_nota": float(item.TOT_NOTA), "produtos": []}
+            nota.get("produtos").append(temp)
+    notas.append(nota)
+    if fecha_conn:
+        conn.close()
+    return notas
+
+
+def itemsnotasfaturadas():
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.itensnotasfaturadas():
+        consultas = conn.cursor().execute(query)
+    item_nota_faturada = []
+    for item in consultas:
+        temp = {"representante": item.REPRE, "rota": item.ROTA, "zona": item.ZONA, "mercado": item.MERCADO,
+                "cliente": item.CODIGO, "estado": item.ST, "fantasia": item.FANTASIA, "empresa": item.EMP,
+                "nota": item.NOTA,
+                "pedido": item.PEDIDO, "data_faturamento": item.DT, "produto": item.PRODUTO,
+                "quantidade": int(item.QTD),
+                "valor_unitario": float(item.UN)}
+        item_nota_faturada.append(temp)
+    conn.close()
+    return item_nota_faturada
+
+
+def notasepedidos(cliente):
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    for query in Query.notasepedidos(cliente=cliente):
+        consultas = conn.cursor().execute(query)
+    notas_pedidos = []
+    for item in consultas:
+        temp = f"{item.CODIGO},{item.EMP},{item.REPRE_F},{item.PED},{item.NOTA},{item.TIPO},"
+
+
+def relatorio_de_compras(repre, cli, top):
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    consultas = None
+    historico_mem = None
+    for query in Query.relatoriodecompras(repre=repre, cliente=cli):
+        consultas = conn.cursor().execute(query)
+    for query in Query.historiconotas(cliente=cli):
+        historico_mem = conn.cursor().execute(query)
+    lista_clientes = []
+
+    for item in consultas:
+        clinte = str(item.ENDERECO).split("-")
+        # cobrancas_mem = conn.cursor().execute(Query.cobrancasporargumentos())
+        item_bd = mongo_client.get_database("prowater") \
+            .get_collection("relatorio_de_compras") \
+            .find_one({"cliente": clinte[0].strip()})
+        historico = []
+        cobs = selecionaCobranca(None, cliente=clinte[0].strip())
+        if item_bd is not None:
+            quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
+            if len(item_bd['historico']) != quantidade_historico:
+                historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+        else:
+            print(f"Novo cliente: {clinte[0].strip()}")
+            historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+        if len(historico) > 1:
+            historico = sorted(historico, key=lambda k: k['data'], reverse=True)
+        temp = {
+            "representante": item.REPRE,
+            "tmp_ped": item.PED,
+            "tmp_fat": item.FAT,
+            "estado": str(item.ST).strip(),
+            "cobrancas": cobs,
+            "cliente": clinte[0].strip(),
+            "fantasia": clinte[1].strip(),
+            "endereco": clinte[2].strip()
+        }
+        if historico:
+            temp['historico'] = historico[:top]
+        lista_clientes.append(temp)
+        mongo_client.get_database("prowater").get_collection("relatorio_de_compras").update_one(
+            {"cliente": clinte[0].strip()},
+            {"$set": temp},
+            upsert=True
+        )
+    print(lista_clientes)
+    historico_mem.close()
+    # cobrancas_mem.close()
+    conn.close()
+    print('Enviando')
+    return lista_clientes
+
+
+def relatorio_cliente(repre, cli, top):
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    item_bd = mongo_client.get_database("prowater") \
+        .get_collection("relatorio_de_compras") \
+        .find_one({"cliente": cli, "representante": repre})
+    if item_bd is None:
+        item_bd = relatorio_de_compras(repre, cli, top)
+        return item_bd
+    return json.loads(dumps(item_bd, default=json_util.default))
+
+
 class Exportar:
+    def relatoriodecompras(self):
+        conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+        mongo_client = pymongo.MongoClient(conn)
+        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        consultas = None
+        historico_mem = None
+        for query in Query.relatoriodecompras():
+            consultas = conn.cursor().execute(query)
+        for query in Query.historiconotas():
+            historico_mem = conn.cursor().execute(query)
+        cobrancas_mem = conn.cursor().execute(Query.cobrancasporargumentos())
+        lista_clientes = []
+
+        for item in consultas:
+            clinte = str(item.ENDERECO).split("-")
+            item_bd = mongo_client.get_database("prowater") \
+                .get_collection("relatorio_de_compras") \
+                .find_one({"cliente": clinte[0].strip()})
+            historico = []
+            cobs = selecionaCobranca(cobrancas_mem, cliente=clinte[0].strip())
+            if item_bd is not None:
+                if len(item_bd['historico']) != quantidadefathistorico(cliente=clinte[0].strip()):
+                    historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+            else:
+                print(f"Novo cliente: {clinte[0].strip()}")
+                historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+            if len(historico) > 1:
+                historico = sorted(historico, key=lambda k: k['data'], reverse=True)
+            temp = {
+                "representante": item.REPRE,
+                "tmp_ped": item.PED,
+                "tmp_fat": item.FAT,
+                "estado": str(item.ST).strip(),
+                "cobrancas": cobs,
+                "cliente": clinte[0].strip(),
+                "fantasia": clinte[1].strip(),
+                "endereco": clinte[2].strip()
+            }
+            if historico:
+                temp['historico'] = historico
+            lista_clientes.append(temp)
+            mongo_client.get_database("prowater").get_collection("relatorio_de_compras").update_one(
+                {"cliente": clinte[0].strip()},
+                {"$set": temp},
+                upsert=True
+            )
+        print(lista_clientes)
+        historico_mem.close()
+        cobrancas_mem.close()
+        conn.close()
+        return lista_clientes
+
     def geolocationAPI(self, respostas, cliente, session):
         endereco = f"{str(cliente['endereco']['numero'])}+{cliente['endereco']['rua'].strip().replace(' ', '+')},+{cliente['endereco']['cidade'].strip().replace(' ', '+')},+{cliente['endereco']['uf']}"
         endereco_b = f"{cliente['endereco']['numero']} {cliente['endereco']['rua'].strip()}, {cliente['endereco']['cidade'].strip()}, {cliente['endereco']['uf']}"
@@ -277,7 +567,7 @@ class Exportar:
         file.write("Latitude;Longitude;Address;ST;Name;Codigo;Rota\n")
         respostas = []
         conn = pyodbc.connect(
-            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
         listaClientes = clientes()
         conn.close()
         numero_de_clientes = len(listaClientes)
@@ -296,7 +586,7 @@ class Exportar:
                 file.write(
                     f"{geolocation};"
                     f"{x['endereco']};"
-                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['estado']};"
                     f"{x['cliente']['fantasia']};"
                     f"{x['cliente']['codigo']};"
                     f"{x['cliente']['rota']}\n")
@@ -305,7 +595,7 @@ class Exportar:
                 file.write(
                     f"{geolocation};"
                     f"{x['endereco']};"
-                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['estado']};"
                     f"{x['cliente']['fantasia']};"
                     f"{x['cliente']['codigo']};"
                     f"{x['cliente']['rota']}\n")
@@ -317,7 +607,7 @@ class Exportar:
         file.write("Address;ST;Name;Codigo;Rota\n")
         respostas = []
         conn = pyodbc.connect(
-            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
         listaClientes = clientes()
         conn.close()
         numero_de_clientes = len(listaClientes)
@@ -331,7 +621,7 @@ class Exportar:
         for x in respostas:
             file.write(
                 f"{x['endereco']};"
-                f"{x['cliente']['status']};"
+                f"{x['cliente']['estado']};"
                 f"{x['cliente']['fantasia']};"
                 f"{x['cliente']['codigo']};"
                 f"{x['cliente']['rota']}\n")
@@ -345,7 +635,7 @@ class Exportar:
         file.write("Latitude;Longitude;Address;ST;Name;Codigo;Rota\n")
         respostas = []
         conn = pyodbc.connect(
-            Dsn="PW32", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
         listaClientes = clientes(clientes=codigo)
         conn.close()
         numero_de_clientes = len(listaClientes)
@@ -364,7 +654,7 @@ class Exportar:
                 file.write(
                     f"{geolocation};"
                     f"{x['endereco']};"
-                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['estado']};"
                     f"{x['cliente']['fantasia']};"
                     f"{x['cliente']['codigo']};"
                     f"{x['cliente']['rota']}\n")
@@ -373,7 +663,7 @@ class Exportar:
                 file.write(
                     f"{geolocation};"
                     f"{x['endereco']};"
-                    f"{x['cliente']['status']};"
+                    f"{x['cliente']['estado']};"
                     f"{x['cliente']['fantasia']};"
                     f"{x['cliente']['codigo']};"
                     f"{x['cliente']['rota']}\n")

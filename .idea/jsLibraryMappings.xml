@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://$PROJECT_DIR$" libraries="{prowater_painel/node_modules}" />
+    <file url="file://$PROJECT_DIR$/sqlanywhere" libraries="{jquery, jquery.mask, jspdf, materialize}" />
+    <file url="PROJECT" libraries="{jquery, jquery.mask, materialize, prowater_painel/node_modules}" />
+  </component>
+</project>
