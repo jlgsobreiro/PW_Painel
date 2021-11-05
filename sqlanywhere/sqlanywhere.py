@@ -114,10 +114,10 @@ def clientes(**kwargs):
 def tabelaprecos():
     conn = pyodbc.connect(
         Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-    tabela_preco = conn.cursor().execute(Query.tabelaprecos())
+    tabela_preco = conn.cursor().execute(Query.tabela4())
     lista_tabela_preco = []
     for item in tabela_preco:
-        temp = {"empresa": item.emp, "codigo": item.cod, "valor": float(item.valor), "tabela": item.tabela}
+        temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR), "tabela": item.TABELA}
         lista_tabela_preco.append(temp)
     conn.close()
     return lista_tabela_preco

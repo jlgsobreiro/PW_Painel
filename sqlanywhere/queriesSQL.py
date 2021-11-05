@@ -23,6 +23,10 @@ def clientes():
     )
 
 
+def tabela4():
+    return ("select ATITM_EMPRESA as EMP, ATITM_COD_ITEM as ITEM, ATITM_TABELA_PRECO as TABELA, cast(ATITM_DATA_INICIAL as DATETIME) as DT_INI, cast(ATITM_DATA_FIN as DATETIME) as DT_FIN, ATITM_VALOR as VALOR from  VNDATITM  where  TABELA = '00001' AND  DT_FIN = (select max(cast(ATITM_DATA_FIN as DATETIME)) as DT from VNDATITM) AND  EMP = 4 ORDER BY  EMP, DT_FIN DESC")
+
+
 def emailporcodigo(codigo, tipo):
     return (
         f"select AMAIL_IDENTIFICA as descr, AMAIL_E_MAIL_WWW as email_site from SUPAMAIL where AMAIL_TIPO = '{tipo}' and AMAIL_CODIGO = {codigo};")
@@ -93,8 +97,8 @@ def entregadivida():
 
 def tabelaprecos():
     return (
-        "select ( case ATITM_EMPRESA when 1 then 'prowater' when 2 then 'proclean' when 3 then 'prolimp'end CASE ) as "
-        "emp, ATITM_COD_ITEM as ITEM,ATITM_TABELA_PRECO as TABELA,cast(ATITM_DATA_INICIAL as DATETIME) as DT_INI,"
+        "select ( case ATITM_EMPRESA when 1 then 'prowater' when 2 then 'proclean' when 3 then 'prolimp' when 4 then 'pronew' "
+        "end CASE ) as emp, ATITM_COD_ITEM as ITEM,ATITM_TABELA_PRECO as TABELA,cast(ATITM_DATA_INICIAL as DATETIME) as DT_INI,"
         "cast(ATITM_DATA_FIN as DATETIME) as DT_FIN, ATITM_VALOR as VALOR from VNDATITM ORDER BY EMP,DT_FIN DESC; "
     )
 

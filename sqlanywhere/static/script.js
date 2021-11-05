@@ -116,8 +116,13 @@ function descontoCaixas (caixas) {
 
  function handle_historico(historico) {
   var comprados = [];
+  var historico_tam = historico.length;
   for (let nota = 0; nota< historico.length; nota++){
     var notas = historico[nota];
+    if (notas.bonificacao === true){
+      historico_tam--;
+      continue;
+    }
     for (let prod = 0; prod< notas.produtos.length; prod++) {
       var produto = notas.produtos[prod];
       var x = comprados.find((item) => {
@@ -149,7 +154,7 @@ function descontoCaixas (caixas) {
     });
     if (comprado !== undefined){
       span.removeClass("hide");
-      span.text((comprados[l].quantidade/historico.length).toFixed(2));
+      span.text((comprados[l].quantidade/historico_tam).toFixed(2));
       l+=1;
     } else {
       span.addClass("hide");
