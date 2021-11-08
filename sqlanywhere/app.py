@@ -211,7 +211,6 @@ def historico_cliente():
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     tabela = Prowater.tabelaprecos()
-    x = (item for item in tabela if item['codigo'] == '011009')
     return render_template("home.html", title="boas", produtos=[
         {"id": 1, "descricao": "CT-1", "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
          "codigo": '011009'},
