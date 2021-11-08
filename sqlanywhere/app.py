@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import flask.json as json
-from flask import Flask, request, session, render_template, url_for, redirect
+from flask import Flask, request, session, render_template, url_for
 from flask_cors import CORS
 
 import sqlanywhere
@@ -95,7 +95,7 @@ def escritor(lista):
             f"{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}"
     observacoes = lista[5]
 
-    linha = [agora, f"({representante})" + sqlanywhere.representante(representante)["fantasia"], cliente, data_entrega,
+    linha = [agora, f"({representante})"+sqlanywhere.representante(representante)["fantasia"], cliente, data_entrega,
              forma_pagamento, '', '', total_caixas, ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
              at2, at2_valor, at5, at5_valor, '', ab1, ab1_valor, ab2, ab2_valor, cb1, cb1_valor, cb2, cb2_valor, '',
              esp1, esp_valor, esp3, esp3_valor, esp4, esp4_valor, '', sens, sens_valor, affe, affe_valor,
@@ -105,12 +105,13 @@ def escritor(lista):
 
     planilha = gc.open_by_key(spreadsheet_id)
     planilha = planilha.get_worksheet_by_id(865878295)
-    planilha.insert_row(linha, len(planilha.get_values()) + 1, value_input_option='USER_ENTERED')
+    planilha.insert_row(linha, len(planilha.get_values())+1, value_input_option='USER_ENTERED')
+
 
 
 @app.route('/', methods=["GET", "POST"])
 def home():
-    return redirect("/painel")
+    return "Olá"
 
 
 @app.route('/cliente', methods=["GET", "POST"])
@@ -236,8 +237,7 @@ def painel():
          "codigo": '031011'},
         {"id": 12, "descricao": "ESP-3", "valor": [item for item in tabela if item['codigo'] == '031013'][0]['valor'],
          "codigo": '031013'},
-        {"id": 13, "descricao": "ESP-DISP",
-         "valor": [item for item in tabela if item['codigo'] == '031014'][0]['valor'],
+        {"id": 13, "descricao": "ESP-DISP", "valor": [item for item in tabela if item['codigo'] == '031014'][0]['valor'],
          "codigo": '031014'},
         {"id": 14, "descricao": "SENS", "valor": [item for item in tabela if item['codigo'] == '041017'][0]['valor'],
          "codigo": '041017'},
