@@ -211,8 +211,8 @@ def historico_cliente():
 def painel():
     try:
         tabela = Prowater.tabelaprecos()
-    except:
-        print("servidor inacessivel")
+    except NameError:
+        print(NameError)
         tabela = [{"codigo": '011009', "valor": 43.08},
                   {"codigo": '011001', "valor": 47.60},
                   {"codigo": '011005', "valor": 55.60},
