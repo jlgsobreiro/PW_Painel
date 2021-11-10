@@ -20,7 +20,7 @@ CORS(app)
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
 sheet_id = "0"
-json_file = "C:\\Users\\jl_so\\PycharmProjects\\prowater_painel\\sqlanywhere\\prowater-177d3-e29737f9229f.json"
+json_file = "prowater-177d3-e29737f9229f.json"
 
 
 def login_sheets():
