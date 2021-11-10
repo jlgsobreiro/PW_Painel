@@ -211,9 +211,10 @@ def historico_cliente():
 def painel():
     tabela = None
     try:
-        tabela = Prowater.tabelaprecos()
+        #tabela = Prowater.tabelaprecos()
     except NameError:
         print(NameError)
+    finally:
         tabela = [{"codigo": '011009', "valor": 43.08},
                   {"codigo": '011001', "valor": 47.60},
                   {"codigo": '011005', "valor": 55.60},
@@ -233,7 +234,6 @@ def painel():
                   {"codigo": '051021', "valor": 79.20},
                   {"codigo": '051022', "valor": 83.70}
                   ]
-    finally:
         return render_template("home.html", title="boas", produtos=[
             {"id": 1, "descricao": "CT-1", "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
              "codigo": '011009'},
