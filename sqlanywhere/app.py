@@ -209,6 +209,7 @@ def historico_cliente():
 
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
+    tabela = None
     try:
         tabela = Prowater.tabelaprecos()
     except NameError:
