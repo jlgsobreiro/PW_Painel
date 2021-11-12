@@ -275,5 +275,7 @@ function forma_de_pagamento(){
     pag28: $("#pag28:checked").val() !== undefined,pag35: $("#pag35:checked").val() !== undefined};
   if (pagamento.pag0 && (pagamento.pag7 || pagamento.pag14 || pagamento.pag21 || pagamento.pag28 || pagamento.pag35)){
     $("#pag0").prop( "checked", false );
+  } else if (!(pagamento.pag7 || pagamento.pag14 || pagamento.pag21 || pagamento.pag28 || pagamento.pag35)) {
+    $("#pag0").prop( "checked", true );
   }
 }
