@@ -209,10 +209,8 @@ def historico_cliente():
 
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
-    try:
-        tabela = Prowater.tabelaprecos()
-    except NameError:
-        print(NameError)
+    tabela = Prowater.tabelaprecos()
+    if len(tabela) == 0:
         tabela = [{"codigo": '011009', "valor": 43.08},
                   {"codigo": '011001', "valor": 47.60},
                   {"codigo": '011005', "valor": 55.60},
@@ -232,54 +230,53 @@ def painel():
                   {"codigo": '051021', "valor": 79.20},
                   {"codigo": '051022', "valor": 83.70}
                   ]
-    finally:
-        return render_template("home.html", title="boas", produtos=[
-            {"id": 1, "descricao": "CT-1", "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
-             "codigo": '011009'},
-            {"id": 2, "descricao": "CT-2", "valor": [item for item in tabela if item['codigo'] == '011001'][0]['valor'],
-             "codigo": '011001'},
-            {"id": 3, "descricao": "CT-5", "valor": [item for item in tabela if item['codigo'] == '011005'][0]['valor'],
-             "codigo": '011005'},
-            {"id": 4, "descricao": "CB-1", "valor": [item for item in tabela if item['codigo'] == '012010'][0]['valor'],
-             "codigo": '012010'},
-            {"id": 5, "descricao": "CB-2", "valor": [item for item in tabela if item['codigo'] == '012003'][0]['valor'],
-             "codigo": '012003'},
-            {"id": 6, "descricao": "AT-1", "valor": [item for item in tabela if item['codigo'] == '021002'][0]['valor'],
-             "codigo": '021002'},
-            {"id": 7, "descricao": "AT-2", "valor": [item for item in tabela if item['codigo'] == '021006'][0]['valor'],
-             "codigo": '021006'},
-            {"id": 8, "descricao": "AT-5", "valor": [item for item in tabela if item['codigo'] == '021007'][0]['valor'],
-             "codigo": '021007'},
-            {"id": 9, "descricao": "AB-1", "valor": [item for item in tabela if item['codigo'] == '022004'][0]['valor'],
-             "codigo": '022004'},
-            {"id": 10, "descricao": "AB-2",
-             "valor": [item for item in tabela if item['codigo'] == '022008'][0]['valor'],
-             "codigo": '022008'},
-            {"id": 11, "descricao": "ESP-1",
-             "valor": [item for item in tabela if item['codigo'] == '031011'][0]['valor'],
-             "codigo": '031011'},
-            {"id": 12, "descricao": "ESP-3",
-             "valor": [item for item in tabela if item['codigo'] == '031013'][0]['valor'],
-             "codigo": '031013'},
-            {"id": 13, "descricao": "ESP-DISP",
-             "valor": [item for item in tabela if item['codigo'] == '031014'][0]['valor'],
-             "codigo": '031014'},
-            {"id": 14, "descricao": "SENS",
-             "valor": [item for item in tabela if item['codigo'] == '041017'][0]['valor'],
-             "codigo": '041017'},
-            {"id": 15, "descricao": "LAMO",
-             "valor": [item for item in tabela if item['codigo'] == '042020'][0]['valor'],
-             "codigo": '042020'},
-            {"id": 16, "descricao": "AFEC",
-             "valor": [item for item in tabela if item['codigo'] == '043018'][0]['valor'],
-             "codigo": '043018'},
-            {"id": 17, "descricao": "SD-400G",
-             "valor": [item for item in tabela if item['codigo'] == '051021'][0]['valor'],
-             "codigo": '051021'},
-            {"id": 18, "descricao": "SD-1KG",
-             "valor": [item for item in tabela if item['codigo'] == '051022'][0]['valor'],
-             "codigo": '051022'}
-        ])
+    return render_template("home.html", title="boas", produtos=[
+        {"id": 1, "descricao": "CT-1", "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
+         "codigo": '011009'},
+        {"id": 2, "descricao": "CT-2", "valor": [item for item in tabela if item['codigo'] == '011001'][0]['valor'],
+         "codigo": '011001'},
+        {"id": 3, "descricao": "CT-5", "valor": [item for item in tabela if item['codigo'] == '011005'][0]['valor'],
+         "codigo": '011005'},
+        {"id": 4, "descricao": "CB-1", "valor": [item for item in tabela if item['codigo'] == '012010'][0]['valor'],
+         "codigo": '012010'},
+        {"id": 5, "descricao": "CB-2", "valor": [item for item in tabela if item['codigo'] == '012003'][0]['valor'],
+         "codigo": '012003'},
+        {"id": 6, "descricao": "AT-1", "valor": [item for item in tabela if item['codigo'] == '021002'][0]['valor'],
+         "codigo": '021002'},
+        {"id": 7, "descricao": "AT-2", "valor": [item for item in tabela if item['codigo'] == '021006'][0]['valor'],
+         "codigo": '021006'},
+        {"id": 8, "descricao": "AT-5", "valor": [item for item in tabela if item['codigo'] == '021007'][0]['valor'],
+         "codigo": '021007'},
+        {"id": 9, "descricao": "AB-1", "valor": [item for item in tabela if item['codigo'] == '022004'][0]['valor'],
+         "codigo": '022004'},
+        {"id": 10, "descricao": "AB-2",
+         "valor": [item for item in tabela if item['codigo'] == '022008'][0]['valor'],
+         "codigo": '022008'},
+        {"id": 11, "descricao": "ESP-1",
+         "valor": [item for item in tabela if item['codigo'] == '031011'][0]['valor'],
+         "codigo": '031011'},
+        {"id": 12, "descricao": "ESP-3",
+         "valor": [item for item in tabela if item['codigo'] == '031013'][0]['valor'],
+         "codigo": '031013'},
+        {"id": 13, "descricao": "ESP-DISP",
+         "valor": [item for item in tabela if item['codigo'] == '031014'][0]['valor'],
+         "codigo": '031014'},
+        {"id": 14, "descricao": "SENS",
+         "valor": [item for item in tabela if item['codigo'] == '041017'][0]['valor'],
+         "codigo": '041017'},
+        {"id": 15, "descricao": "LAMO",
+         "valor": [item for item in tabela if item['codigo'] == '042020'][0]['valor'],
+         "codigo": '042020'},
+        {"id": 16, "descricao": "AFEC",
+         "valor": [item for item in tabela if item['codigo'] == '043018'][0]['valor'],
+         "codigo": '043018'},
+        {"id": 17, "descricao": "SD-400G",
+         "valor": [item for item in tabela if item['codigo'] == '051021'][0]['valor'],
+         "codigo": '051021'},
+        {"id": 18, "descricao": "SD-1KG",
+         "valor": [item for item in tabela if item['codigo'] == '051022'][0]['valor'],
+         "codigo": '051022'}
+    ])
 
 
 @app.route('/resumo', methods=["GET", "POST"])

@@ -112,8 +112,7 @@ def clientes(**kwargs):
 
 
 def tabelaprecos():
-    conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     tabela_preco = conn.cursor().execute(Query.tabela4())
     lista_tabela_preco = []
     for item in tabela_preco:
