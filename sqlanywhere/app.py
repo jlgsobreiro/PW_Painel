@@ -4,6 +4,7 @@ import flask.json as json
 from flask import Flask, request, session, render_template, url_for
 from flask_cors import CORS
 
+import queriesSQL
 import sqlanywhere
 from flask_session import Session
 
@@ -210,7 +211,17 @@ def historico_cliente():
 
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
-    tabela = Prowater.tabelaprecos()
+    def tabelaprecos():
+        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        tabela_preco = conn.cursor().execute(queriesSQL.tabela4())
+        lista_tabela_preco = []
+        for item in tabela_preco:
+            temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),
+                    "tabela": item.TABELA}
+            lista_tabela_preco.append(temp)
+        conn.close()
+        return lista_tabela_preco
+    tabela = tabelaprecos()
     if len(tabela) == 0:
         tabela = [{"codigo": '011009', "valor": 43.08},
                   {"codigo": '011001', "valor": 47.60},
