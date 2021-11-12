@@ -298,7 +298,7 @@ def resumo():
     cliente = request.form.getlist('cliente')[0]
     representante = request.form.getlist('representante')[0]
     data_entrega = request.form.getlist('data_entrega')[0]
-    observcoes = request.form.getlist('observacoes')[0]
+    observcoes = f"Via web: {request.form.getlist('observacoes')[0]}"
     forma_de_pagamento = None
     try:
         produtos = []
