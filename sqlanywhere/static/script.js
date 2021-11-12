@@ -86,14 +86,15 @@ function descontoCaixas (caixas) {
    desconto_ped = parseFloat(x/tot_tabela);
    total_ped = x.toFixed(2);
    desconto_max = parseFloat(descontoCaixas(tot_qtd));
+   let desconto_final = isNaN((1-desconto_ped)*100) ? 0 : (1-desconto_ped)*100;
    if (descontoCaixas(tot_qtd) <= desconto_ped){
      $("#total_final").text(total_ped);
-     $("#desconto_final").text("% "+((1-desconto_ped)*100).toFixed(2));
+     $("#desconto_final").text("% "+ desconto_final.toFixed(2));
      habilita_resumo();
    } else {
      $('#modal').addClass("disabled");
      $("#total_final").text("Desconto Maximo excedido");
-     $("#desconto_final").text("% "+((1-desconto_ped)*100).toFixed(2));
+     $("#desconto_final").text("% "+ desconto_final.toFixed(2));
    }
  }
 
