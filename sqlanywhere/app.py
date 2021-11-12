@@ -91,7 +91,7 @@ def escritor(lista):
         sd40_valor += produto['valor'] if produto['codigo'] == '051021' else 0
         sd1k += produto['quantidade'] if produto['codigo'] == '051022' else 0
         sd1k_valor += produto['valor'] if produto['codigo'] == '051022' else 0
-        total += produto['valor']
+        total += produto['valor']*produto['quantidade']
         total_caixas += produto['quantidade']
     agora = f"{datetime.now().day}/{datetime.now().month}/{datetime.now().year} " \
             f"{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}"
