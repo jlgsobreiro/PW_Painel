@@ -93,6 +93,7 @@ function descontoCaixas (caixas) {
    } else {
      $('#modal').addClass("disabled");
      $("#total_final").text("Desconto Maximo excedido");
+     $("#desconto_final").text((1-desconto_ped).toFixed(2));
    }
  }
 
