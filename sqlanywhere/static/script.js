@@ -155,8 +155,14 @@ function descontoCaixas (caixas) {
       }
     });
     if (comprado !== undefined){
+      let ult_qtd = historico[0].produtos.find((hist) => {
+          if (hist.produto === items[i].codigo){
+            return hist;
+          }
+        }).quantidade;
       span.removeClass("hide");
-      span.text((comprados[l].quantidade/historico_tam).toFixed(2));
+      span.text("Média: "+(comprados[l].quantidade/historico_tam).toFixed(2)+
+        " Ultima: "+ ult_qtd);
       l+=1;
     } else {
       span.addClass("hide");
