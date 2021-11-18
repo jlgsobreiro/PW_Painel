@@ -147,23 +147,23 @@ function descontoCaixas (caixas) {
     }
   });
   for(let i = 0; i<items.length; i++){
+    let l = 0;
     var span = $("#"+items[i].codigo);
     var comprado = comprados.find((compra) =>{
       if (compra.codigo === items[i].codigo){
         return compra;
       }
+      l++;
     });
-    let l = 0;
     if (comprado !== undefined){
       var ult_qtd = historico[0].produtos.find((hist) => {
           if (hist.produto === items[i].codigo){
             return hist;
           }
-          l++;
         });
       ult_qtd = ult_qtd === undefined ? {quantidade:0} : ult_qtd;
       span.removeClass("hide");
-      span.text("Média: "+(comprados[l].quantidade/historico_tam).toFixed(2)+
+      span.text("Média: "+(comprado.quantidade/historico_tam).toFixed(2)+
         " Ultima: "+ ult_qtd.quantidade);
     } else {
       span.addClass("hide");
