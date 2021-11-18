@@ -173,30 +173,34 @@ function descontoCaixas (caixas) {
 
 
 function handle_cobrancas(cobs){
-  cobs.sort((a,b) => {
-         if (a.vencimento.$date > b.vencimento.$date){
-           return 1;
-         }
-         else {
-           return -1;
-         }
-       });
-  var cobrancas = "";
-  if (cobs.length >0){
-         $('#atrasado_header').removeClass("hide");
-       }
-  for (let i = 0; i < cobs.length; i++){
-    var cob = cobs[i];
-    cobrancas += (
-      "<tr>"+
-      "<td>"+cob.nota_fiscal+"</td>"+
-      "<td>"+ new Date(cob.vencimento.$date).toISOString().slice(0,10)+"</td>"+
-      "<td>R$"+cob.valor+"</td>"+
-      "<td>R$"+(parseFloat(cob.valor) + parseFloat(cob.valor)*0.004*((Date.now()-cob.vencimento.$date)/(1000*3600*24))).toFixed(2) +"</td>"+
-      "</tr>"
-    );
+  if (cobs.length === 0){
+    $('#atrasado_header').addClass("hide");
+  } else {
+    cobs.sort((a,b) => {
+      if (a.vencimento.$date > b.vencimento.$date){
+        return 1;
+      }
+      else {
+        return -1;
+      }
+    });
+    var cobrancas = "";
+    if (cobs.length >0){
+      $('#atrasado_header').removeClass("hide");
+    }
+    for (let i = 0; i < cobs.length; i++){
+      var cob = cobs[i];
+      cobrancas += (
+        "<tr>"+
+        "<td>"+cob.nota_fiscal+"</td>"+
+        "<td>"+ new Date(cob.vencimento.$date).toISOString().slice(0,10)+"</td>"+
+        "<td>R$"+cob.valor+"</td>"+
+        "<td>R$"+(parseFloat(cob.valor) + parseFloat(cob.valor)*0.004*((Date.now()-cob.vencimento.$date)/(1000*3600*24))).toFixed(2) +"</td>"+
+        "</tr>"
+      );
+    }
+    $('#linha_atrasado').html(cobrancas);
   }
-  $('#linha_atrasado').html(cobrancas);
 }
 
 function zerar(id){
