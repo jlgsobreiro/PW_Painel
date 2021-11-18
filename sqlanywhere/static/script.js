@@ -146,7 +146,6 @@ function descontoCaixas (caixas) {
       return -1;
     }
   });
-  let l = 0;
   for(let i = 0; i<items.length; i++){
     var span = $("#"+items[i].codigo);
     var comprado = comprados.find((compra) =>{
@@ -154,16 +153,18 @@ function descontoCaixas (caixas) {
         return compra;
       }
     });
+    let l = 0;
     if (comprado !== undefined){
-      let ult_qtd = historico[0].produtos.find((hist) => {
+      var ult_qtd = historico[0].produtos.find((hist) => {
           if (hist.produto === items[i].codigo){
             return hist;
           }
-        }).quantidade;
+          l++;
+        });
+      ult_qtd = ult_qtd === undefined ? {quantidade:0} : ult_qtd;
       span.removeClass("hide");
       span.text("Média: "+(comprados[l].quantidade/historico_tam).toFixed(2)+
-        " Ultima: "+ ult_qtd);
-      l+=1;
+        " Ultima: "+ ult_qtd.quantidade);
     } else {
       span.addClass("hide");
     }
