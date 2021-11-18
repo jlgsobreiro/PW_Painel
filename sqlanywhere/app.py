@@ -20,8 +20,8 @@ Session(app)
 CORS(app)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
-#spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
+#spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
+spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
 sheet_id = "0"
 json_file = "prowater-177d3-e29737f9229f.json"
 
@@ -107,8 +107,8 @@ def escritor(lista):
     gc = login_sheets()
 
     planilha = gc.open_by_key(spreadsheet_id)
-    planilha = planilha.get_worksheet_by_id(865878295)
     #planilha = planilha.get_worksheet_by_id(865878295)
+    planilha = planilha.get_worksheet_by_id(865878295)
     planilha.insert_row(linha, len(planilha.get_values()) + 1, value_input_option='USER_ENTERED')
 
 
