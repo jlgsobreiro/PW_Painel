@@ -107,8 +107,14 @@ function descontoCaixas (caixas) {
  function handler_cliente() {
    let repre = $("#representante").val();
    let cli = $("#cliente").val();
+   let repre_nome = $("#representante_nome");
+   let cliente_nome = $("#cliente_nome");
    if (repre !== '' && cli !== '') {
      $.post("/historico_cliente", {cliente: cli, representante: repre}, function (data) {
+       repre_nome.html(data.representante_nome);
+       repre_nome.removeClass("hide");
+       cliente_nome.html(data.fantasia);
+       cliente_nome.removeClass("hide");
        handle_cobrancas(data.cobrancas);
        handle_historico(data.historico);
        habilita_resumo();
