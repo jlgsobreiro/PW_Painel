@@ -27,7 +27,8 @@ def getEmails(codigo: any, tipo: str):
 
 def clientefantasia(codigo):
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-    tabela = conn.cursor().execute(f"SELECT AEMPR_NOME_ABREV as FANT FROM SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_CODIGO = {codigo}")
+    tabela = conn.cursor().execute(
+        f"SELECT AEMPR_NOME_ABREV as FANT FROM SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_CODIGO = {codigo}")
     fantasia = ''
     for cli in tabela:
         fantasia = cli.FANT.strip()
@@ -116,7 +117,8 @@ def tabelaprecos():
     tabela_preco = conn.cursor().execute(Query.tabela4())
     lista_tabela_preco = []
     for item in tabela_preco:
-        temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR), "tabela": item.TABELA}
+        temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),
+                "tabela": item.TABELA}
         lista_tabela_preco.append(temp)
     conn.close()
     return lista_tabela_preco
@@ -175,10 +177,11 @@ def selecionaCobranca(tabelacobrancas, **kwargs):
     return resultado
 
 
-def representantes():
+def representantes(**kwargs):
+    repre = kwargs.get("repre") if kwargs.get("repre") is None else ""
     conn = pyodbc.connect(
         Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-    representantes = conn.cursor().execute(Query.representantes())
+    representantes = conn.cursor().execute(Query.representantes(repre))
     lista_de_representantes = []
     for item in representantes:
         temp = {"codigo": item.COD, "razao_social": item.RAZAO, "fantasia": item.FANT,
@@ -427,6 +430,7 @@ def relatorio_de_compras(repre, cli, top):
         consultas = conn.cursor().execute(query)
     for query in Query.historiconotas(cliente=cli):
         historico_mem = conn.cursor().execute(query)
+    repre_dados = representantes(repre=repre)[0]
     lista_clientes = []
 
     for item in consultas:
@@ -448,6 +452,7 @@ def relatorio_de_compras(repre, cli, top):
             historico = sorted(historico, key=lambda k: k['data'], reverse=True)
         temp = {
             "representante": item.REPRE,
+            "representante_nome": repre_dados.get("fantasia"),
             "tmp_ped": item.PED,
             "tmp_fat": item.FAT,
             "estado": str(item.ST).strip(),
