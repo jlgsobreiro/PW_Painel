@@ -21,11 +21,19 @@ $(document).ready(function(){
       selectMonths: true,
       selectYears: 15
     })});
+  $("#cliente_nome").autocomplete({
+    data: {},
+    onAutocomplete: (function (selecionado) {
+      $("#cliente").val(parseInt(lista_auto[selecionado])).change();
+      $("#cliente_label").addClass("active");
+    })
+  });
 });
 let items;
 let total_ped;
 let desconto_ped;
 let desconto_max;
+let lista_auto;
 function onload_tabela(produtos){
   items = produtos;
 }
@@ -99,22 +107,54 @@ function descontoCaixas (caixas) {
  }
 
  function habilita_resumo(){
-  if ($("#representante").val() !== '' && $("#cliente").val() !== '') {
+  let repre = $("#representante");
+  let cli = $("#cliente");
+  let cli_nome = $("#cliente_nome");
+  if (repre.val() !== ''){
+    cli.prop("disabled",false);
+    cli_nome.prop("disabled",false);
+  } else {
+    cli.prop("disabled",true);
+    cli_nome.prop("disabled",true);
+  }
+  if (repre.val() !== '' && cli.val() !== '') {
     $('#modal').removeClass("disabled");
   }
  }
 
+ function limpa_cliente(){
+  let cli = $("#cliente");
+  let cli_nome = $("#cliente_nome");
+  cli.val('');
+  cli_nome.val('');
+ }
+
  function handler_cliente() {
    let repre = $("#representante").val();
-   let cli = $("#cliente").val();
+   let cli = $("#cliente");
+   let cli_nome = $("#cliente_nome");
    let repre_nome = $("#representante_nome");
-   let cliente_nome = $("#cliente_nome");
-   if (repre !== '' && cli !== '') {
-     $.post("/historico_cliente", {cliente: cli, representante: repre}, function (data) {
+   var instance = M.Autocomplete.getInstance(cli_nome);
+   if (repre !== ''){
+     $.post("/clientes",{representante:repre},function (data) {
+       let lista = {};
+       lista_auto = {};
+       for (let i = 0; i < data.length; i++){
+         let chave = "" + data[i].fantasia
+         lista[chave] = null;
+         lista_auto[chave] = data[i].cliente;
+       }
+       instance.updateData(lista);
+     });
+     cli.prop("disabled",false);
+     cli_nome.prop("disabled",false);
+   }
+   if (repre !== '' && cli.val() !== '') {
+     $.post("/historico_cliente", {cliente: cli.val(), representante: repre}, function (data) {
        repre_nome.html(data.representante_nome);
+       cli_nome.val(data.fantasia);
        repre_nome.removeClass("hide");
-       cliente_nome.html(data.fantasia);
-       cliente_nome.removeClass("hide");
+       $("#cliente_nome_label").addClass("active");
        handle_cobrancas(data.cobrancas);
        handle_historico(data.historico);
        habilita_resumo();

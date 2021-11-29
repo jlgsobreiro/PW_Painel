@@ -73,6 +73,16 @@ def extratorcliente(listaclientes: list):
     return lista_cliente
 
 
+def clientes_repre(**kwargs):
+    repre = kwargs.get("repre")
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    item_bd = mongo_client.get_database("prowater") \
+        .get_collection("relatorio_de_compras") \
+        .find({"representante": repre}, {"fantasia": 1, "cliente": 1, "_id": 0})
+    return json.loads(dumps(item_bd, default=json_util.default))
+
+
 def clientes(**kwargs):
     """
     :param kwargs: str or list or none
@@ -430,7 +440,7 @@ def relatorio_de_compras(repre, cli, top):
         consultas = conn.cursor().execute(query)
     for query in Query.historiconotas(cliente=cli):
         historico_mem = conn.cursor().execute(query)
-    repre_dados = representantes(repre=repre)[0]
+    repre_dados = representante(repre)
     lista_clientes = []
 
     for item in consultas:

@@ -6,15 +6,19 @@
             <div class="row">
                 <div class="input-field col l6 m12 s12">
                     <i class="material-icons prefix" style="color: white">assignment_ind</i>
-                    <input class="validate representante" id="representante" type="text" style="color: white" data-mask="00000" onchange="handler_cliente()">
+                    <input class="validate representante" id="representante" type="text" style="color: white" data-mask="00000" onchange="limpa_cliente()" onkeyup="handler_cliente()">
                     <label for="representante" style="color: white">Representante</label>
                     <span id="representante_nome" class="hide col l6 m6 s6 white-text"></span>
                 </div>
                 <div class="input-field col l6 m12 s12">
                     <i class="material-icons prefix" style="color: white">shopping_cart</i>
-                    <input class="validate cliente" id="cliente" type="text" style="color: white" onchange="handler_cliente()">
-                    <label for="cliente" style="color: white">Cliente</label>
-                    <span id="cliente_nome" class="hide col l6 m6 s6 white-text"></span>
+                    <input disabled class="validate cliente" id="cliente" type="text" style="color: white" onchange="handler_cliente()">
+                    <label id="cliente_label" for="cliente" style="color: white">Cliente</label>
+                    <div class="input-field col l12 m12 s12">
+                        <i class="material-icons prefix" style="color: white">store</i>
+                        <input disabled class="autocomplete" id="cliente_nome" type="text" style="color: white" onchange="handler_cliente()">
+                        <label id="cliente_nome_label" for="cliente_nome" style="color: white">Nome</label>
+                    </div>
                 </div>
             </div>
         </div>

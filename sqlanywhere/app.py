@@ -20,7 +20,7 @@ Session(app)
 CORS(app)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-#spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
+# spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
 spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
 sheet_id = "0"
 json_file = "prowater-177d3-e29737f9229f.json"
@@ -92,7 +92,7 @@ def escritor(lista):
         sd40_valor += produto['valor'] if produto['codigo'] == '051021' else 0
         sd1k += produto['quantidade'] if produto['codigo'] == '051022' else 0
         sd1k_valor += produto['valor'] if produto['codigo'] == '051022' else 0
-        total += produto['valor']*produto['quantidade']
+        total += produto['valor'] * produto['quantidade']
         total_caixas += produto['quantidade']
     agora = f"{datetime.now().day}/{datetime.now().month}/{datetime.now().year} " \
             f"{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}"
@@ -107,7 +107,7 @@ def escritor(lista):
     gc = login_sheets()
 
     planilha = gc.open_by_key(spreadsheet_id)
-    #planilha = planilha.get_worksheet_by_id(865878295)
+    # planilha = planilha.get_worksheet_by_id(865878295)
     planilha = planilha.get_worksheet_by_id(865878295)
     planilha.insert_row(linha, len(planilha.get_values()) + 1, value_input_option='USER_ENTERED')
 
@@ -118,9 +118,16 @@ def home():
 
 
 @app.route('/cliente', methods=["GET", "POST"])
-def clientes():
+def cliente():
     clientepost = request.form.get("cliente")
     return json.jsonify(Prowater.clientes(clientes=clientepost))
+
+
+@app.route('/clientes', methods=["GET", "POST"])
+def clientes():
+    representante = request.form.get("representante")
+    representante = '0' * (5 - len(representante)) + representante
+    return json.jsonify(Prowater.clientes_repre(repre=representante))
 
 
 @app.route('/tabela_preco', methods=["GET", "POST"])
@@ -223,6 +230,7 @@ def painel():
             lista_tabela_preco.append(temp)
         conn.close()
         return lista_tabela_preco
+
     tabela = tabelaprecos()
     if len(tabela) == 0:
         tabela = [{"codigo": '011009', "valor": 43.08},
