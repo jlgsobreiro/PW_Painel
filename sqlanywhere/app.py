@@ -99,7 +99,7 @@ def escritor(lista):
     observacoes = lista[5]
 
     linha = [agora, f"({representante})" + sqlanywhere.representante(representante)["fantasia"], cliente, data_entrega,
-             forma_pagamento, '', '', total_caixas, ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
+             forma_pagamento, '', '', '', ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
              at2, at2_valor, at5, at5_valor, '', ab1, ab1_valor, ab2, ab2_valor, cb1, cb1_valor, cb2, cb2_valor, '',
              esp1, esp_valor, esp3, esp3_valor, esp4, esp4_valor, '', sens, sens_valor, affe, affe_valor,
              lamo, lamo_valor, '', sd40, sd40_valor, sd1k, sd1k_valor, '', sqlanywhere.clientefantasia(cliente),
