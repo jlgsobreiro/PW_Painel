@@ -235,7 +235,7 @@ def painel():
     if len(tabela) == 0:
         tabela = [{"codigo": '011009', "valor": 43.08},
                   {"codigo": '011001', "valor": 47.60},
-                  {"codigo": '011005', "valor": 55.60},
+                  {"codigo": '011005', "valor": 55.80},
                   {"codigo": '012010', "valor": 45.60},
                   {"codigo": '012003', "valor": 53.60},
                   {"codigo": '021002', "valor": 33.00},
