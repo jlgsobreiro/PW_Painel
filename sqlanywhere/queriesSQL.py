@@ -232,6 +232,10 @@ def relatoriodecompas():
     ])
 
 
+def supervisores(repre):
+    return (f"select AEMPR_REPR as SUPERVISOR from SUPAEMPR where AEMPR_CODIGO = {repre} AND AEMPR_TIPO = 'R'")
+
+
 def relatoriodecompras(**kwargs):
     cli = f" AND b.CODIGO = {kwargs.get('cliente')}" if kwargs.get('cliente') is not None else ''
     repre = f" AND b.REPRE = {kwargs.get('repre')}" if kwargs.get("repre") is not None else ""
