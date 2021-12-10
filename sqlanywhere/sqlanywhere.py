@@ -79,7 +79,7 @@ def clientes_repre(**kwargs):
     mongo_client = pymongo.MongoClient(conn)
     item_bd = mongo_client.get_database("prowater") \
         .get_collection("relatorio_de_compras") \
-        .find({"representante": repre}, {"fantasia": 1, "cliente": 1, "_id": 0})
+        .find({"supervisores": repre}, {"fantasia": 1, "cliente": 1, "_id": 0})
     return json.loads(dumps(item_bd, default=json_util.default))
 
 
@@ -430,6 +430,19 @@ def notasepedidos(cliente):
         temp = f"{item.CODIGO},{item.EMP},{item.REPRE_F},{item.PED},{item.NOTA},{item.TIPO},"
 
 
+def supervisores(repre):
+    conn = pyodbc.connect(
+        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    superv = [repre]
+    consultas = conn.cursor().execute(Query.supervisores(repre=repre))
+    for item in consultas:
+        if item.SUPERVISOR != repre:
+            temp = str(item.SUPERVISOR)
+            superv += supervisores(temp)
+    conn.close()
+    return superv
+
+
 def relatorio_de_compras(repre, cli, top):
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
@@ -469,7 +482,8 @@ def relatorio_de_compras(repre, cli, top):
             "cobrancas": cobs,
             "cliente": clinte[0].strip(),
             "fantasia": clinte[1].strip(),
-            "endereco": clinte[2].strip()
+            "endereco": clinte[2].strip(),
+            "supervisores": supervisores(repre=item.REPRE)
         }
         if historico:
             temp['historico'] = historico[:top]
