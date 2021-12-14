@@ -506,7 +506,7 @@ def relatorio_cliente(repre, cli, top):
     mongo_client = pymongo.MongoClient(conn)
     item_bd = mongo_client.get_database("prowater") \
         .get_collection("relatorio_de_compras") \
-        .find_one({"cliente": cli, "representante": repre})
+        .find_one({"cliente": cli, "supervisores": repre})
     if item_bd is None:
         item_bd = relatorio_de_compras(repre, cli, top)
         return item_bd
