@@ -467,7 +467,7 @@ def relatorio_de_compras(repre, cli, top):
         quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
         if item_bd is not None:
             qtd_h = item_bd['qtd_historico'] if item_bd['qtd_historico'] is not None else 0
-            if item_bd['qtd_historico'] != quantidade_historico:
+            if qtd_h != quantidade_historico:
                 historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
         else:
             print(f"Novo cliente: {clinte[0].strip()}")
