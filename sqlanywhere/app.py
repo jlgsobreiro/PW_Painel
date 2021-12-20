@@ -48,42 +48,42 @@ def escritor(lista):
     ct2_valor = ct2 = cti_valor = ct1 = 0
     for produto in lista[4]:
         ct1 += produto['quantidade'] if produto['codigo'] == '011009' else 0
-        cti_valor += produto['valor'] if produto['codigo'] == '011009' else 0
+        cti_valor += produto['pedido'] if produto['codigo'] == '011009' else 0
         ct2 += produto['quantidade'] if produto['codigo'] == '011001' else 0
-        ct2_valor += produto['valor'] if produto['codigo'] == '011001' else 0
+        ct2_valor += produto['pedido'] if produto['codigo'] == '011001' else 0
         ct5 += produto['quantidade'] if produto['codigo'] == '011005' else 0
-        ct5_valor += produto['valor'] if produto['codigo'] == '011005' else 0
+        ct5_valor += produto['pedido'] if produto['codigo'] == '011005' else 0
         at1 += produto['quantidade'] if produto['codigo'] == '021002' else 0
-        at1_valor += produto['valor'] if produto['codigo'] == '021002' else 0
+        at1_valor += produto['pedido'] if produto['codigo'] == '021002' else 0
         at2 += produto['quantidade'] if produto['codigo'] == '021006' else 0
-        at2_valor += produto['valor'] if produto['codigo'] == '021006' else 0
+        at2_valor += produto['pedido'] if produto['codigo'] == '021006' else 0
         at5 += produto['quantidade'] if produto['codigo'] == '021007' else 0
-        at5_valor += produto['valor'] if produto['codigo'] == '021007' else 0
+        at5_valor += produto['pedido'] if produto['codigo'] == '021007' else 0
         ab1 += produto['quantidade'] if produto['codigo'] == '022004' else 0
-        ab1_valor += produto['valor'] if produto['codigo'] == '022004' else 0
+        ab1_valor += produto['pedido'] if produto['codigo'] == '022004' else 0
         ab2 += produto['quantidade'] if produto['codigo'] == '022008' else 0
-        ab2_valor += produto['valor'] if produto['codigo'] == '022008' else 0
+        ab2_valor += produto['pedido'] if produto['codigo'] == '022008' else 0
         cb1 += produto['quantidade'] if produto['codigo'] == '012003' else 0
-        cb1_valor += produto['valor'] if produto['codigo'] == '012003' else 0
+        cb1_valor += produto['pedido'] if produto['codigo'] == '012003' else 0
         cb2 += produto['quantidade'] if produto['codigo'] == '012010' else 0
-        cb2_valor += produto['valor'] if produto['codigo'] == '012010' else 0
+        cb2_valor += produto['pedido'] if produto['codigo'] == '012010' else 0
         esp1 += produto['quantidade'] if produto['codigo'] == '031011' else 0
-        esp_valor += produto['valor'] if produto['codigo'] == '031011' else 0
+        esp_valor += produto['pedido'] if produto['codigo'] == '031011' else 0
         esp3 += produto['quantidade'] if produto['codigo'] == '031014' else 0
-        esp3_valor += produto['valor'] if produto['codigo'] == '031014' else 0
+        esp3_valor += produto['pedido'] if produto['codigo'] == '031014' else 0
         esp4 += produto['quantidade'] if produto['codigo'] == '031013' else 0
-        esp4_valor += produto['valor'] if produto['codigo'] == '031013' else 0
+        esp4_valor += produto['pedido'] if produto['codigo'] == '031013' else 0
         sens += produto['quantidade'] if produto['codigo'] == '041017' else 0
-        sens_valor += produto['valor'] if produto['codigo'] == '041017' else 0
+        sens_valor += produto['pedido'] if produto['codigo'] == '041017' else 0
         affe += produto['quantidade'] if produto['codigo'] == '042020' else 0
-        affe_valor += produto['valor'] if produto['codigo'] == '042020' else 0
+        affe_valor += produto['pedido'] if produto['codigo'] == '042020' else 0
         lamo += produto['quantidade'] if produto['codigo'] == '043018' else 0
-        lamo_valor += produto['valor'] if produto['codigo'] == '043018' else 0
+        lamo_valor += produto['pedido'] if produto['codigo'] == '043018' else 0
         sd40 += produto['quantidade'] if produto['codigo'] == '051021' else 0
-        sd40_valor += produto['valor'] if produto['codigo'] == '051021' else 0
+        sd40_valor += produto['pedido'] if produto['codigo'] == '051021' else 0
         sd1k += produto['quantidade'] if produto['codigo'] == '051022' else 0
-        sd1k_valor += produto['valor'] if produto['codigo'] == '051022' else 0
-        total += produto['valor'] * produto['quantidade']
+        sd1k_valor += produto['pedido'] if produto['codigo'] == '051022' else 0
+        total += produto['pedido'] * produto['quantidade']
         total_caixas += produto['quantidade']
     agora = f"{datetime.now().day}/{datetime.now().month}/{datetime.now().year} " \
             f"{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}"
