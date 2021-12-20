@@ -33,15 +33,6 @@ def login_sheets():
     return gc
 
 
-def leitor(aba):
-    gc = login_sheets()
-    planilha = gc.open("Nome da Planilha")
-    aba = planilha.get_worksheet_by_id(spreadsheet_id)
-    dados = aba.get_all_records()
-    df = pd.DataFrame(dados)
-    return df
-
-
 def escritor(lista):
     representante = lista[0]
     cliente = lista[1]
@@ -244,8 +235,8 @@ def painel():
                   {"codigo": '022004', "valor": 38.16},
                   {"codigo": '022008', "valor": 39.92},
                   {"codigo": '031011', "valor": 51.00},
-                  {"codigo": '031013', "valor": 373.90},
                   {"codigo": '031014', "valor": 98.40},
+                  {"codigo": '031013', "valor": 373.90},
                   {"codigo": '041017', "valor": 28.20},
                   {"codigo": '042020', "valor": 28.20},
                   {"codigo": '043018', "valor": 28.20},
@@ -278,11 +269,11 @@ def painel():
          "valor": [item for item in tabela if item['codigo'] == '031011'][0]['valor'],
          "codigo": '031011'},
         {"id": 12, "descricao": "ESP-3",
-         "valor": [item for item in tabela if item['codigo'] == '031013'][0]['valor'],
-         "codigo": '031013'},
-        {"id": 13, "descricao": "ESP-DISP",
          "valor": [item for item in tabela if item['codigo'] == '031014'][0]['valor'],
          "codigo": '031014'},
+        {"id": 13, "descricao": "ESP-DISP",
+         "valor": [item for item in tabela if item['codigo'] == '031013'][0]['valor'],
+         "codigo": '031013'},
         {"id": 14, "descricao": "SENS",
          "valor": [item for item in tabela if item['codigo'] == '041017'][0]['valor'],
          "codigo": '041017'},
