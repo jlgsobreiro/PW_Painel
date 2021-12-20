@@ -464,9 +464,9 @@ def relatorio_de_compras(repre, cli, top):
             .find_one({"cliente": clinte[0].strip()})
         historico = []
         cobs = selecionaCobranca(None, cliente=clinte[0].strip())
+        quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
         if item_bd is not None:
-            quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
-            if len(item_bd['historico']) != quantidade_historico:
+            if len(item_bd['qtd_historico']) != quantidade_historico:
                 historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
         else:
             print(f"Novo cliente: {clinte[0].strip()}")
@@ -483,7 +483,8 @@ def relatorio_de_compras(repre, cli, top):
             "cliente": clinte[0].strip(),
             "fantasia": clinte[1].strip(),
             "endereco": clinte[2].strip(),
-            "supervisores": supervisores(repre=item.REPRE)
+            "supervisores": supervisores(repre=item.REPRE),
+            "qtd_historico": quantidade_historico
         }
         if historico:
             temp['historico'] = historico[:top]
