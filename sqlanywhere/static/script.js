@@ -172,9 +172,7 @@ function descontoCaixas (caixas) {
        $("#cliente_nome_label").addClass("active");
        handle_cobrancas(data.cobrancas);
        handle_historico(data.historico);
-       if (data.tabela){
-         handle_tabela(data.tabela);
-       }
+       handle_tabela(data.tabela);
        habilita_resumo();
      });
    }
