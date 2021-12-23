@@ -26,11 +26,11 @@
 {% endblock %}
 
 {% block body %}
-    <ul class="collapsible">
+    <ul class="collapsible col s6 m6 l12">
         <li>
           <div id="atrasado_header" class="collapsible-header hide"><i class="material-icons">payment</i>Cobranças</div>
           <div id="atrasado_body" class="collapsible-body">
-              <table class="striped">
+              <table class="striped responsive-table">
                   <thead>
                       <tr>
                           <th>Nota</th>
@@ -47,55 +47,58 @@
         </li>
     </ul>
     <div class="divider"></div>
-    <table class="striped">
-        <thead>
-          <tr>
-              <th>Codigo</th>
-              <th>Produto</th>
-              <th>Quantidade</th>
-              <th>Unidade</th>
-              <th>Total</th>
-              <th>Apagar</th>
-          </tr>
-        </thead>
-        <tbody>
-            {% for produto in produtos %}
-                <tr>
-                <td>{{ produto['codigo'] }}</td>
-                    <td class="row">
-                        <img class="materialboxed" data-caption="{{ produto['descricao'] }}" height="64px" src="../static/images/{{ produto['codigo'] }}.png">
-                        {{ produto['descricao'] }}
-                    </td>
-                    <td>
-                        <input class="qtd" type="number" id="quantidade-{{ produto['id'] }}" onchange="handler('quantidade',{{ produto['id'] }})" value="0">
-                        <label for="quantidade-{{ produto['id'] }}">Quantidade</label>
-                        <span class="hide" id="{{ produto['codigo'] }}">0</span>
-                    </td>
-                    <td>
-                        <input class="valor" type="number" id="unidade-{{ produto['id'] }}" value="{{ "%0.2f"|format(produto['valor']|float) }}" onchange="handler('unidade',{{ produto['id'] }})" >
-                        <label for="unidade-{{ produto['id'] }}">Valor un | Tabela: R${{ "%0.2f"|format(produto['valor']|float) }}</label>
-                    </td>
-                    <td class="row">
-                        <span id="total-{{ produto['id'] }}">
+    <!---
+    <div class="row">
+        <div class="col s1 m1 l1" style="font-weight: bold">Codigo</div>
+        <div class="col s1 m1 l1" style="font-weight: bold">Produto</div>
+        <div class="col s2 m2 l2" style="font-weight: bold">Quantidade</div>
+        <div class="col s1 m1 l1" style="font-weight: bold">Unidade</div>
+        <div class="col s1 m1 l1" style="font-weight: bold">Total</div>
+        <div class="col s1 m1 l1" style="font-weight: bold">Apagar</div>
+    </div>
+    --->
+    <div>
+        {% for produto in produtos %}
+            <div class="linha_produto row" style="background-color:{% if produto['id']%2 == 1 %} white" {% else %}  #f3eeee" {% endif %}>
+                <div class="linha_desc col s3 m3 l3">
+                    <span class="col s12 m12 l12 horizontal">{{ produto['codigo'] }}</span>
+                    <div style="text-align: -webkit-center" class="col s12 m12 l12">
+                        <img class="materialboxed" data-caption="{{ produto['descricao'] }}"
+                             src="../static/images/{{ produto['codigo'] }}.png">
+                    </div>
+                    <span class="col s12 m12 l12" style="text-align: center">{{ produto['descricao'] }}</span>
+                </div>
+                <div class="linha_vlqtd col s5 m5 l5">
+                        <div class="col s12 m12 l6">
+                            <input class="qtd" type="number" id="quantidade-{{ produto['id'] }}" onchange="handler('quantidade',{{ produto['id'] }})" value="0">
+                            <label for="quantidade-{{ produto['id'] }}">Quantidade</label>
+                            <span class="hide" id="{{ produto['codigo'] }}">0</span>
+                        </div>
+                        <div class="col s12 m12 l6">
+                            <input class="valor" type="number" id="unidade-{{ produto['id'] }}" value="{{ "%0.2f"|format(produto['valor']|float) }}" onchange="handler('unidade',{{ produto['id'] }})" >
+                            <label for="unidade-{{ produto['id'] }}">Valor un | Tabela: R${{ "%0.2f"|format(produto['valor']|float) }}</label>
+                        </div>
+                    </div>
+                <div class="linha_totais col s3 m3 l3">
+                        <span class="total_linha col s12 m12 l6" id="total-{{ produto['id'] }}">
                         </span>
-                        <span id="desconto-{{ produto['id'] }}"></span>
-                    </td>
-                <td>
-                    <i class="material-icons prefix" style="color: red" onclick="zerar({{ produto['id'] }})">close</i>
-                </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td><span>Total</span></td>
-                <td><span id="total_final"></span></td>
-                <td><span>Desconto</span></td>
-                <td><span id="desconto_final"></span></td>
-            </tr>
-        </tfoot>
-      </table>
-    <a id="modal" class="waves-effect waves-light btn modal-trigger disabled" style="width: 100%; height: 128px; text-align: center; margin-bottom: 12px" href="#modal1" onclick="resumo()"><h1>Resumo</h1></a>
+                        <span class="desconto_linha col s12 m12 l6" id="desconto-{{ produto['id'] }}"></span>
+                    </div>
+                <div class="linha_apagar col s1 m1 l1">
+                    <i class="apagar material-icons prefix" style="color: red" onclick="zerar({{ produto['id'] }})">close</i>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="col s12 m12 l12">
+        <div>
+            <span>Total</span>
+            <span id="total_final"></span>
+            <span>Desconto</span>
+            <span id="desconto_final"></span>
+        </div>
+    </div>
+    <a id="modal" class="waves-effect waves-light btn modal-trigger disabled" style="width: 100%; height: auto; text-align: center; margin-bottom: 12px" href="#modal1" onclick="resumo()"><h1>Resumo</h1></a>
     <div id="modal1" class="modal">
         <div class="modal-content">
             <h4>Resumo</h4>
@@ -119,8 +122,8 @@
             <div class="row">
                 <form class="col s12">
                     <div class="row">
-                        <h6 class="col s2 m2 l2"><b>Data entrega: </b></h6>
-                        <input type="text" class="datepicker col s2 m2 l2" id="entrega" value="Imediata">
+                        <h6 class="col s5 m5 l4"><b>Data entrega: </b></h6>
+                        <input type="text" class="datepicker col s4 m4 l4" id="entrega" value="Imediata">
                     </div>
                     <div class="row">
                         <div class="col s12 m12 l12">
@@ -158,7 +161,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <a href="#!" class="modal-close waves-effect waves-green btn-flat" onclick="cria_pdf()">Enviar</a>
+            <a href="#!" class="enviar_btn waves-effect waves-light btn modal-trigger" onclick="cria_pdf()">Enviar</a>
         </div>
     </div>
 {% endblock %}
