@@ -9,8 +9,6 @@ import queriesSQL as Query
 import pymongo
 
 """Retorna email"""
-
-
 def getEmails(codigo: any, tipo: str):
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     emails = conn.cursor().execute(Query.emailporcodigo(codigo, tipo))
@@ -34,6 +32,14 @@ def clientefantasia(codigo):
         fantasia = cli.FANT.strip()
     conn.close()
     return fantasia
+
+
+def cursor_para_lista_dict(cursor):
+    colunas = [coluna[0] for coluna in cursor.description]
+    linhas = []
+    for linha in cursor.fetchall():
+        linhas.append(dict(zip(colunas, linha)))
+    return linhas
 
 
 def extratorcliente(listaclientes: list):
@@ -449,13 +455,11 @@ def relatorio_de_compras(repre, cli, top):
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     historico_mem = None
-    for query in Query.relatoriodecompras(repre=repre, cliente=cli):
+    for query in Query.relatoriodecomprasleve(repre=repre, cliente=cli):
         consultas = conn.cursor().execute(query)
-    for query in Query.historiconotas(cliente=cli):
-        historico_mem = conn.cursor().execute(query)
+    tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=cli)))
     repre_dados = representante(repre)
     lista_clientes = []
-
     for item in consultas:
         clinte = str(item.ENDERECO).split("-")
         # cobrancas_mem = conn.cursor().execute(Query.cobrancasporargumentos())
@@ -468,10 +472,16 @@ def relatorio_de_compras(repre, cli, top):
         if item_bd is not None:
             qtd_h = item_bd.get('qtd_historico') if item_bd.get('qtd_historico') is not None else 0
             if qtd_h != quantidade_historico:
+                for query in Query.historiconotas(cliente=cli):
+                    historico_mem = conn.cursor().execute(query)
                 historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+                historico_mem.close()
         else:
             print(f"Novo cliente: {clinte[0].strip()}")
+            for query in Query.historiconotas(cliente=cli):
+                historico_mem = conn.cursor().execute(query)
             historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+            historico_mem.close()
         if len(historico) > 1:
             historico = sorted(historico, key=lambda k: k['data'], reverse=True)
         temp = {
@@ -489,6 +499,13 @@ def relatorio_de_compras(repre, cli, top):
         }
         if historico:
             temp['historico'] = historico[:top]
+        if tabela_preco:
+            lista_produtos = cursor_para_lista_dict(
+                conn.cursor().execute(Query.produtostabela(tabela=tabela_preco[0].get("TABELA"))))
+            for i in range(len(lista_produtos)):
+                lista_produtos[i]["VALOR"] = float(lista_produtos[i].get("VALOR"))
+                lista_produtos[i]["ITEM"] = lista_produtos[i].get("ITEM").strip()
+            temp['tabela'] = lista_produtos
         lista_clientes.append(temp)
         mongo_client.get_database("prowater").get_collection("relatorio_de_compras").update_one(
             {"cliente": clinte[0].strip()},
@@ -496,7 +513,6 @@ def relatorio_de_compras(repre, cli, top):
             upsert=True
         )
     print(lista_clientes)
-    historico_mem.close()
     # cobrancas_mem.close()
     conn.close()
     print('Enviando')

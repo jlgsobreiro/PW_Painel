@@ -1,4 +1,7 @@
+/*jshint esversion: 6 */
+/*globals $:false */
 $(document).ready(function(){
+  "use strict";
   $('.modal').modal();
   $('.collapsible').collapsible();
   $('.representante').mask('00000');
@@ -35,10 +38,12 @@ let desconto_ped;
 let desconto_max;
 let lista_auto;
 function onload_tabela(produtos){
+  "use strict";
   items = produtos;
 }
 
  function handler(componente,id){
+  "use strict";
   let quantidade = $("#quantidade-"+id);
   let unidade = $("#unidade-"+id);
   let qtd = parseFloat(quantidade.val());
@@ -57,10 +62,13 @@ function onload_tabela(produtos){
     $('#modal').addClass("disabled");
   }
   $("#total-"+id).text((qtd*un).toFixed(2));
-  $("#desconto-"+id).text("%"+((1-((qtd*un)/(qtd*items[id-1].valor)))*100).toFixed(2));
+  const desc_calc = (1-((qtd*un)/(qtd*items[id-1].valor)))*100;
+  let desc = isNaN( desc_calc) ? 0 : desc_calc;
+  $("#desconto-"+id).text("%"+(desc).toFixed(2));
  }
 
 function descontoCaixas (caixas) {
+  "use strict";
   if (caixas <= 40){
     return 1.0;
   } else if (caixas <= 60){
@@ -81,20 +89,24 @@ function descontoCaixas (caixas) {
 }
 
  function total_pedido() {
-   let x=0.0;
+  "use strict";
+  let x=0.0;
    let tot_qtd = 0;
    let tot_tabela = 0.0;
+   let tot_tabela_cli = 0.0;
    for (let i = 0; i< items.length;i++){
      let qtd = items[i].quantidade !== undefined ? parseInt(items[i].quantidade) : 0;
      let vl_pedido = items[i].pedido !== undefined ? parseFloat(items[i].pedido) : 0;
      tot_qtd += qtd;
+     tot_tabela_cli += qtd*items[i].tabela;
      tot_tabela += qtd*items[i].valor;
      x += qtd * vl_pedido;
    }
-   desconto_ped = parseFloat(x/tot_tabela);
+   desconto_ped = parseFloat(x/tot_tabela_cli);
+   let desconto_ped_real = parseFloat(x/tot_tabela);
    total_ped = x.toFixed(2);
    desconto_max = parseFloat(descontoCaixas(tot_qtd));
-   let desconto_final = isNaN((1-desconto_ped)*100) ? 0 : (1-desconto_ped)*100;
+   let desconto_final = isNaN((1-desconto_ped_real)*100) ? 0 : (1-desconto_ped_real)*100;
    if (descontoCaixas(tot_qtd) <= desconto_ped){
      $("#total_final").text(total_ped);
      $("#desconto_final").text("% "+ desconto_final.toFixed(2));
@@ -107,6 +119,7 @@ function descontoCaixas (caixas) {
  }
 
  function habilita_resumo(){
+  "use strict";
   let repre = $("#representante");
   let cli = $("#cliente");
   let cli_nome = $("#cliente_nome");
@@ -123,6 +136,7 @@ function descontoCaixas (caixas) {
  }
 
  function limpa_cliente(){
+  "use strict";
   let cli = $("#cliente");
   let cli_nome = $("#cliente_nome");
   cli.val('');
@@ -130,7 +144,8 @@ function descontoCaixas (caixas) {
  }
 
  function handler_cliente() {
-   let repre = $("#representante").val();
+  "use strict";
+  let repre = $("#representante").val();
    let cli = $("#cliente");
    let cli_nome = $("#cliente_nome");
    let repre_nome = $("#representante_nome");
@@ -140,7 +155,7 @@ function descontoCaixas (caixas) {
        let lista = {};
        lista_auto = {};
        for (let i = 0; i < data.length; i++){
-         let chave = "" + data[i].fantasia
+         let chave = "" + data[i].fantasia;
          lista[chave] = null;
          lista_auto[chave] = data[i].cliente;
        }
@@ -157,12 +172,28 @@ function descontoCaixas (caixas) {
        $("#cliente_nome_label").addClass("active");
        handle_cobrancas(data.cobrancas);
        handle_historico(data.historico);
+       if (data.tabela){
+         handle_tabela(data.tabela);
+       }
        habilita_resumo();
      });
    }
  }
 
+ function handle_tabela(tabela) {
+  "use strict";
+  for (let i = 0; i < items.length; i++) {
+    items[i].tabela = items[i].valor;
+  }
+  if (tabela){
+    for (let i = 0; i < items.length; i++) {
+     items[i].tabela = tabela.find(elem => elem.ITEM === items[i].codigo).VALOR;
+    }
+  }
+ }
+
  function handle_historico(historico) {
+  "use strict";
   var comprados = [];
   var historico_tam = historico.length;
   for (let nota = 0; nota< historico.length; nota++){
@@ -219,6 +250,7 @@ function descontoCaixas (caixas) {
 
 
 function handle_cobrancas(cobs){
+  "use strict";
   if (cobs.length === 0){
     $('#atrasado_header').addClass("hide");
   } else {
@@ -250,10 +282,11 @@ function handle_cobrancas(cobs){
 }
 
 function zerar(id){
+  "use strict";
   let input_qtd = $("#quantidade-"+id);
   let input_un = $("#unidade-"+id);
   let desconto = $("#desconto-"+id);
-  desconto.addClass("hide");
+  desconto.val(0);
   input_qtd.val('0');
   input_un.val(items[id-1].valor);
   handler("quantidade",id);
@@ -261,6 +294,7 @@ function zerar(id){
 
 
 function resumo_pedido(){
+  "use strict";
   let comprados = [];
   for (let i = 0; i< items.length;i++){
     if (items[i].quantidade !== undefined){
@@ -274,6 +308,7 @@ function resumo_pedido(){
 
 
 function resumo(){
+  "use strict";
   let repre = $("#representante").val();
   let cli = $("#cliente").val();
   if (repre === '' || cli === ''){
@@ -308,20 +343,31 @@ function enviar() {
 
 }
 
+
+function formas_de_pagamento() {
+  "use strict";
+  return {pag0: $("#pag0:checked").val() !== undefined,pag7: $("#pag7:checked").val() !== undefined,
+    pag14: $("#pag14:checked").val() !== undefined, pag21: $("#pag21:checked").val() !== undefined,
+    pag28: $("#pag28:checked").val() !== undefined,pag35: $("#pag35:checked").val() !== undefined};
+}
+
+
 function cria_pdf(){
+  "use strict";
   let repre = $("#representante").val();
   let cli = $("#cliente").val();
   let items = resumo_pedido();
   let data_entrega = $("#entrega").val();
   let observacoes = $("#observacoes").val();
-  let forma_de_pagamento = {pag0: $("#pag0:checked").val() !== undefined,pag7: $("#pag7:checked").val() !== undefined
-    ,pag14: $("#pag14:checked").val() !== undefined, pag21: $("#pag21:checked").val() !== undefined,
-    pag28: $("#pag28:checked").val() !== undefined,pag35: $("#pag35:checked").val() !== undefined};
+  let forma_de_pagamento = formas_de_pagamento();
   $.post("/resumo", {cliente: cli, representante: repre, items: items, numero: items.length,
       pagamento: forma_de_pagamento, data_entrega: data_entrega, observacoes: observacoes},
     function (data) {
     if (data.res === 200){
       M.toast({html:"Enviado com Sucesso"});
+      for (let i =0; i<items.length; i++){
+        zerar(i+1);
+      }
     } else {
       M.toast({html:"Houve alguma erro"});
     }
@@ -329,9 +375,8 @@ function cria_pdf(){
 }
 
 function forma_de_pagamento(){
-  let pagamento = {pag0: $("#pag0:checked").val() !== undefined,pag7: $("#pag7:checked").val() !== undefined
-    ,pag14: $("#pag14:checked").val() !== undefined, pag21: $("#pag21:checked").val() !== undefined,
-    pag28: $("#pag28:checked").val() !== undefined,pag35: $("#pag35:checked").val() !== undefined};
+  "use strict";
+  let pagamento = formas_de_pagamento();
   if (pagamento.pag0 && (pagamento.pag7 || pagamento.pag14 || pagamento.pag21 || pagamento.pag28 || pagamento.pag35)){
     $("#pag0").prop( "checked", false );
   } else if (!(pagamento.pag7 || pagamento.pag14 || pagamento.pag21 || pagamento.pag28 || pagamento.pag35)) {
