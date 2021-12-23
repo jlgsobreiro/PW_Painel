@@ -1,11 +1,168 @@
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+@media only screen and (min-width: 601px) {
+  .btn-flat{
+    font-size: 0.8rem;
+  }
+  textarea.materialize-textarea{
+    font-size: inherit;
+  }
+  .datepicker-date-display .date-text{
+    font-size: 1.3rem;
+  }
+  .enviar_btn{
+    width: 100%;
+    font-size: 1.4rem;
+    height: 3rem;
+    text-align: center;
+    line-height: 96px;
+  }
+  .modal-footer{
+    text-align: center;
+  }
+  .materialboxed{
+    justify-content: center;
+    max-width: 150px;
+    max-height: 150px
+  }
+  .materia-placeholder{
+    justify-content: center;
+  }
+  html{
+    font-size: xx-large;
+  }
+  input{
+    font-size: xx-large;
+  }
+  div{
+    font-size: xx-large;
+  }
+  label{
+    font-size: .7rem;
+  }
+  .desconto_linha{
+    font-size: xxx-large;
+  }
+  .total_linha{
+    font-size: xxx-large;
+  }
+  .qtd{
+    font-size: xx-large;
+  }
+  .valor{
+    font-size: xx-large;
+  }
+  input[type=text]:not(.browser-default){
+    font-size: 1.4rem;
+  }
+
+  input[type=number]:not(.browser-default){
+    font-size: xxx-large;
+  }
+  span{
+    font-size: xx-large;
+  }
+  .representante{
+    font-size: inherit;
+  }
+  .apagar{
+    font-size: xxx-large;
+    margin-top: 4rem;
+  }
+  .linha_totais{
+    font-size: xx-large;
+    margin-top: 81px;
+  }
+  .linha_vlqtd{
+    height: 306px;
+  }
+  .linha_desc{
+    text-align: center;
+    height: 306px;
+    padding-top: 3%;
+    padding-bottom: 5%;
+  }
+  .linha_produto{
+    height: 360px;
+  }
+}
+@media only screen and (min-width: 993px) {
+  textarea.materialize-textarea{
+    font-size: inherit;
+  }
+  .enviar_btn{
+    width: 100%;
+    font-size: 1.4rem;
+    height: 3rem;
+    text-align: center;
+    line-height: 96px;
+  }
+  .modal-footer{
+    text-align: center;
+  }
+  .materialboxed{
+    justify-content: center;
+    max-width: 150px;
+    max-height: 150px
+  }
+  .materia-placeholder{
+    justify-content: center;
+  }
+  html{
+    font-size: large;
+  }
+  input{
+    font-size: large;
+  }
+  div{
+    font-size: large;
+  }
+  label{
+    font-size: .8rem;
+  }
+  .desconto_linha{
+    font-size: x-large;
+  }
+  .total_linha{
+    font-size: x-large;
+  }
+  .qtd{
+    font-size: large;
+  }
+  .valor{
+    font-size: large;
+  }
+  input[type=text]:not(.browser-default){
+    font-size: x-large;
+  }
+
+  input[type=number]:not(.browser-default){
+    font-size: x-large;
+  }
+  span{
+    font-size: large;
+  }
+  .representante{
+    font-size: inherit;
+  }
+  .apagar{
+    font-size: x-large;
+    margin-top: 4rem;
+  }
+  .linha_totais{
+    font-size: large;
+    margin-top: 81px;
+  }
+  .linha_vlqtd{
+    height: auto;
+  }
+  .linha_desc{
+    height: auto;
+    text-align: center;
+    padding-top: 3%;
+    padding-bottom: 5%;
+  }
+  .linha_produto{
+    height: auto;
+  }
 }
 
-/* Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
-}
+
