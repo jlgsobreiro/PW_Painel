@@ -366,8 +366,9 @@ function cria_pdf(){
       for (let i =0; i<items.length; i++){
         zerar(i+1);
       }
+      M.Modal.getInstance($("#modal1")).close();
     } else {
-      M.toast({html:"Houve alguma erro"});
+      M.toast({html:"Houve algum erro"});
     }
   });
 }
