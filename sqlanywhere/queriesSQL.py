@@ -431,8 +431,8 @@ def itensnotasfaturadas():
 def aplicacaor():
     return ("select CODIGOEMP, CODIGOUNIDADE,  CODIGODOCUMENTO, SERIE, NUMERO,IF ANFCD_STS_NFE = 'D' THEN "
             "'Denegada'ELSE IF ANFCD_STS_NFE = 'C' THEN 'Cancelada' ELSE IF ANFCD_STS_NFE = 'P' THEN 'Aprovada' END "
-            "IF END IF END IF as NF_STATUS, PARCELA, CODIGOAPLICACAO, CODIGOCATEGORIA, EMISSAO, VENCIMENTO, "
-            "RECEBIMENTO, cast(VALOR as float) as VALOR, cast(VALORDESCONTO as float) as VALORDESCONTO, cast(VALORACRESCIMO as float) as VALORACRESCIMO, datepart(year,EMISSAO)||'-'||datepart(month,"
+            "IF END IF END IF as NF_STATUS, PARCELA, CODIGOAPLICACAO, CODIGOCATEGORIA, dateformat(EMISSAO,'yyyy-mm-dd') as EMISSAO, dateformat(VENCIMENTO,'yyyy-mm-dd') as VENCIMENTO, "
+            "dateformat(RECEBIMENTO,'yyyy-mm-dd') as RECEBIMENTO, cast(VALOR as float) as VALOR, cast(VALORDESCONTO as float) as VALORDESCONTO, cast(VALORACRESCIMO as float) as VALORACRESCIMO, datepart(year,EMISSAO)||'-'||datepart(month,"
             "EMISSAO) as ANO_MES from  AplicacaoR left join VNDANFCD on numero = RIGHT(ANFCD_NUM_NOTA,"
             "8) AND CODIGOEMP = ANFCD_EMPRESA where datediff(year,EMISSAO,cast(20210101 as DATETIME)) <= 0 order by "
             "Emissao desc")
@@ -440,7 +440,7 @@ def aplicacaor():
 
 def aplicacaop():
     return ("select CODIGOEMP, CODIGOUNIDADE, TIPOEMPRESA,CODIGOEMPRESA, AEMPR_NOME_ABREV, CODIGODOCUMENTO, SERIE, "
-            "NUMERO,PARCELA, CODIGOAPLICACAO, CODIGOCATEGORIA, EMISSAO, VENCIMENTO, RECEBIMENTO, cast(VALOR as float) as VALOR, cast(VALORDESCONTO as float) as VALORDESCONTO, "
+            "NUMERO,PARCELA, CODIGOAPLICACAO, CODIGOCATEGORIA, dateformat(EMISSAO,'yyyy-mm-dd') as EMISSAO, dateformat(VENCIMENTO,'yyyy-mm-dd') as VENCIMENTO, dateformat(RECEBIMENTO,'yyyy-mm-dd') as RECEBIMENTO, cast(VALOR as float) as VALOR, cast(VALORDESCONTO as float) as VALORDESCONTO, "
             "cast(VALORACRESCIMO as float) as VALORACRESCIMO,datepart(year,EMISSAO)||'-'||datepart(month,EMISSAO) as ANO_MES "
             "from AplicacaoP left join SUPAEMPR on AEMPR_TIPO = TIPOEMPRESA AND AEMPR_CODIGO = CODIGOEMPRESA "
             "where datediff(year,EMISSAO,cast(20210101 as DATETIME)) <= 0")
