@@ -531,6 +531,18 @@ def relatorio_cliente(repre, cli, top):
     return json.loads(dumps(item_bd, default=json_util.default))
 
 
+def aplicacaop():
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    res = conn.cursor().execute(Query.aplicacaop())
+    return cursor_para_lista_dict(res)
+
+
+def aplicacaor():
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    res = conn.cursor().execute(Query.aplicacaor())
+    return cursor_para_lista_dict(res)
+
+
 class Exportar:
     def relatoriodecompras(self):
         conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"

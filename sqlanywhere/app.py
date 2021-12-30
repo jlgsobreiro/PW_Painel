@@ -327,5 +327,15 @@ def resumo():
         # render_template("home.html", title="boas", produtos=produtos)
 
 
+@app.route('/aplicacaop', methods=["GET", "POST"])
+def aplicacaop():
+    return json.jsonify(Prowater.aplicacaop())
+
+
+@app.route('/aplicacaor', methods=["GET", "POST"])
+def aplicacaor():
+    return json.jsonify(Prowater.aplicacaor())
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
