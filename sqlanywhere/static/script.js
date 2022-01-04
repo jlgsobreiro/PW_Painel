@@ -364,7 +364,7 @@ function cria_pdf(){
     if (data.res === 200){
       M.toast({html:"Enviado com Sucesso"});
       for (let i =0; i<items.length; i++){
-        zerar(i+1);
+        zerar(items[i].id);
       }
       M.Modal.getInstance($("#modal1")).close();
     } else {
