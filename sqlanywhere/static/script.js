@@ -2,7 +2,9 @@
 /*globals $:false */
 $(document).ready(function(){
   "use strict";
-  $('.modal').modal();
+  $('#modal').modal();
+  $('#modal1').modal();
+  $('#modal_enviando').modal({dismissible: false, startingTop: '30%', endingTop: '30%'});
   $('.collapsible').collapsible();
   $('.representante').mask('00000');
   $('.cliente').mask('00000');
@@ -358,6 +360,8 @@ function cria_pdf(){
   let data_entrega = $("#entrega").val();
   let observacoes = $("#observacoes").val();
   let forma_de_pagamento = formas_de_pagamento();
+  M.Modal.getInstance($("#modal1")).close();
+  M.Modal.getInstance($("#modal_enviando")).open();
   $.post("/resumo", {cliente: cli, representante: repre, items: items, numero: items.length,
       pagamento: forma_de_pagamento, data_entrega: data_entrega, observacoes: observacoes},
     function (data) {
@@ -366,10 +370,10 @@ function cria_pdf(){
       for (let i =0; i<items.length; i++){
         zerar(items[i].id);
       }
-      M.Modal.getInstance($("#modal1")).close();
     } else {
       M.toast({html:"Houve algum erro"});
     }
+    M.Modal.getInstance($("#modal_enviando")).close();
   });
 }
 
