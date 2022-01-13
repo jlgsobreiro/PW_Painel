@@ -167,6 +167,8 @@ function descontoCaixas (caixas) {
      cli_nome.prop("disabled",false);
    }
    if (repre !== '' && cli.val() !== '') {
+     $("#texto_enviando").text("Carregando Informções do cliente");
+     M.Modal.getInstance($("#modal_enviando")).open();
      $.post("/historico_cliente", {cliente: cli.val(), representante: repre}, function (data) {
        repre_nome.html(data.representante_nome);
        cli_nome.val(data.fantasia);
@@ -176,6 +178,11 @@ function descontoCaixas (caixas) {
        handle_historico(data.historico);
        handle_tabela(data.tabela);
        habilita_resumo();
+     }).done(function () {
+       M.Modal.getInstance($("#modal_enviando")).close();
+     }).fail(function () {
+       M.Modal.getInstance($("#modal_enviando")).close();
+       M.toast({html: "Erro ao consultar cliente"});
      });
    }
  }
@@ -361,6 +368,7 @@ function cria_pdf(){
   let observacoes = $("#observacoes").val();
   let forma_de_pagamento = formas_de_pagamento();
   M.Modal.getInstance($("#modal1")).close();
+  $("#texto_enviando").text("Por favor aguarde, seu pedido está sendo enviado.");
   M.Modal.getInstance($("#modal_enviando")).open();
   $.post("/resumo", {cliente: cli, representante: repre, items: items, numero: items.length,
       pagamento: forma_de_pagamento, data_entrega: data_entrega, observacoes: observacoes},
