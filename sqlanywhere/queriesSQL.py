@@ -239,10 +239,11 @@ def supervisores(repre):
 def relatoriodecomprasleve(**kwargs):
     cli = f" AND b.CODIGO = {kwargs.get('cliente')}" if kwargs.get('cliente') is not None else ''
     repre = f" AND b.REPRE = {kwargs.get('repre')}" if kwargs.get("repre") is not None else ""
+    cnpj_cpf = f" AND CNPJ_CPF = {kwargs.get('cnpj_cpf')}" if kwargs.get("cnpj_cpf") is not None else ""
     return ([
         f"SELECT cast(max(ANFCD_DATA_CAD) as DATETIME) as DT INTO #ultimo_pedido FROM VNDANFCD,VNDANFLN where ANFCD_NUM_NOTA = ANFLN_NUM_NOTA AND ANFCD_EMPRESA = ANFLN_EMPRESA AND (ANFCD_STS_NFE != 'C' OR ANFCD_STS_NFE != 'D') AND ANFCD_TIPO_OPER = 'NF1' AND ANFCD_CLIENTE = {kwargs.get('cliente')}",
         f"SELECT cast(max(APECD_DATA_EMISSAO) as DATETIME) as DT INTO #ultimo_faturado FROM VNDAPECD WHERE APECD_DESTINO = '01' AND APECD_CLIENTE = {kwargs.get('cliente')}",
-        f"SELECT b.REPRE, b.ST, (select DT from  #ultimo_pedido where b.CODIGO = CODIGO) as PED, (select DT from #ultimo_faturado where b.CODIGO = CODIGO) as FAT, b.CODIGO + ' - ' + b.FANTASIA + ' - ' + trim(s.AEMPR_RUA_AV) + ', ' + trim(s.AEMPR_NRO)+ ', ' + trim(s.AEMPR_COMPL) as ENDERECO FROM BYTEC2.VIEWROTAREPRESENTANTE b, SUPAEMPR s WHERE b.CODIGO = s.AEMPR_CODIGO AND s.AEMPR_TIPO = 'C' {cli} {repre} "
+        f"SELECT b.REPRE, b.ST, (select DT from  #ultimo_pedido where b.CODIGO = CODIGO) as PED, (select DT from #ultimo_faturado where b.CODIGO = CODIGO) as FAT, b.CODIGO + ' - ' + b.FANTASIA + ' - ' + trim(s.AEMPR_RUA_AV) + ', ' + trim(s.AEMPR_NRO)+ ', ' + trim(s.AEMPR_COMPL) as ENDERECO, if(s.AEMPR_CGC_CPF = 'F') then s.AEMPR_CPF ELSE s.AEMPR_CGC ENDIF as CNPJ_CPF FROM BYTEC2.VIEWROTAREPRESENTANTE b, SUPAEMPR s WHERE b.CODIGO = s.AEMPR_CODIGO AND s.AEMPR_TIPO = 'C' {cli} {repre} {cnpj_cpf}"
      ])
 
 

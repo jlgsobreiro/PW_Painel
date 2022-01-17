@@ -9,6 +9,11 @@
                     <input class="validate representante" id="representante" type="text" style="color: white" data-mask="00000" onchange="limpa_cliente()" onkeyup="handler_cliente()">
                     <label for="representante" style="color: white">Representante</label>
                     <span id="representante_nome" class="hide col l6 m6 s6 white-text"></span>
+                    <div class="input-field col l12 m12 s12">
+                        <i class="material-icons prefix" style="color: white">store</i>
+                        <input disabled id="cnpj_cpf" type="text" style="color: white" onchange="handler_cliente()">
+                        <label id="cliente_nome_label" for="cnpj_cpf" style="color: white">CNPJ/CPF</label>
+                    </div>
                 </div>
                 <div class="input-field col l6 m12 s12">
                     <i class="material-icons prefix" style="color: white">shopping_cart</i>

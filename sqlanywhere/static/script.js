@@ -145,46 +145,57 @@ function descontoCaixas (caixas) {
   cli_nome.val('');
  }
 
- function handler_cliente() {
+function handler_cliente() {
   "use strict";
   let repre = $("#representante").val();
-   let cli = $("#cliente");
-   let cli_nome = $("#cliente_nome");
-   let repre_nome = $("#representante_nome");
-   var instance = M.Autocomplete.getInstance(cli_nome);
-   if (repre !== ''){
-     $.post("/clientes",{representante:repre},function (data) {
-       let lista = {};
-       lista_auto = {};
-       for (let i = 0; i < data.length; i++){
-         let chave = "" + data[i].fantasia;
-         lista[chave] = null;
-         lista_auto[chave] = data[i].cliente;
-       }
-       instance.updateData(lista);
-     });
-     cli.prop("disabled",false);
-     cli_nome.prop("disabled",false);
-   }
-   if (repre !== '' && cli.val() !== '') {
-     $("#texto_enviando").text("Carregando Informções do cliente");
-     M.Modal.getInstance($("#modal_enviando")).open();
-     $.post("/historico_cliente", {cliente: cli.val(), representante: repre}, function (data) {
-       repre_nome.html(data.representante_nome);
-       cli_nome.val(data.fantasia);
-       repre_nome.removeClass("hide");
-       $("#cliente_nome_label").addClass("active");
-       handle_cobrancas(data.cobrancas);
-       handle_historico(data.historico);
-       handle_tabela(data.tabela);
-       habilita_resumo();
-     }).done(function () {
-       M.Modal.getInstance($("#modal_enviando")).close();
-     }).fail(function () {
-       M.Modal.getInstance($("#modal_enviando")).close();
-       M.toast({html: "Erro ao consultar cliente"});
-     });
-   }
+  let cnpj_cpf = $("#cnpj_cpf");
+  let cli = $("#cliente");
+  let cli_nome = $("#cliente_nome");
+  let repre_nome = $("#representante_nome");
+  var instance = M.Autocomplete.getInstance(cli_nome);
+  if (repre !== ''){
+    $.post("/clientes",{representante:repre},function (data) {
+      let lista = {};
+      lista_auto = {};
+      for (let i = 0; i < data.length; i++){
+        let chave = "" + data[i].fantasia;
+        lista[chave] = null;
+        lista_auto[chave] = data[i].cliente;
+      }
+      instance.updateData(lista);
+    });
+    cli.prop("disabled",false);
+    cli_nome.prop("disabled",false);
+    cnpj_cpf.prop("disabled",false);
+  }
+  if (repre !== '' && (cli.val() !== '' || cnpj_cpf.val() !== '')) {
+    $("#texto_enviando").text("Carregando Informções do cliente");
+    M.Modal.getInstance($("#modal_enviando")).open();
+    $.post("/historico_cliente", {cliente: cli.val(), representante: repre, cnpj_cpf: cnpj_cpf.val()}, function (data) {
+      repre_nome.html(data.representante_nome);
+      cli_nome.val(data.fantasia);
+      $('#cliente_nome_label').addClass('active');
+      if (cli.val() === ''){
+        cli.val(data.cliente);
+        $('#cliente_label').addClass('active');
+      }
+      if (cnpj_cpf.val() === ''){
+        cnpj_cpf.val(data.cnpj_cpf);
+        $('#cnpj_cpf_label').addClass('active');
+      }
+      repre_nome.removeClass("hide");
+      $("#cliente_nome_label").addClass("active");
+      handle_cobrancas(data.cobrancas);
+      handle_historico(data.historico);
+      handle_tabela(data.tabela);
+      habilita_resumo();
+    }).done(function () {
+      M.Modal.getInstance($("#modal_enviando")).close();
+    }).fail(function () {
+      M.Modal.getInstance($("#modal_enviando")).close();
+      M.toast({html: "Erro ao consultar cliente"});
+    });
+  }
  }
 
  function handle_tabela(tabela) {

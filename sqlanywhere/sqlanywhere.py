@@ -449,15 +449,15 @@ def supervisores(repre):
     return superv
 
 
-def relatorio_de_compras(repre, cli, top):
+def relatorio_de_compras(repre, cli, cnpj_cpf, top):
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     historico_mem = None
-    for query in Query.relatoriodecomprasleve(repre=repre, cliente=cli):
+    for query in Query.relatoriodecomprasleve(repre=repre, cliente=cli, cnpj_cpf=cnpj_cpf):
         consultas = conn.cursor().execute(query)
-    tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=cli)))
+
     repre_dados = representante(repre)
     lista_clientes = []
     for item in consultas:
@@ -495,10 +495,12 @@ def relatorio_de_compras(repre, cli, top):
             "fantasia": clinte[1].strip(),
             "endereco": clinte[2].strip(),
             "supervisores": supervisores(repre=item.REPRE),
-            "qtd_historico": quantidade_historico
+            "qtd_historico": quantidade_historico,
+            "cnpj_cpf": item.CNPJ_CPF
         }
         if historico:
             temp['historico'] = historico[:top]
+        tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=clinte[0].strip())))
         if tabela_preco:
             lista_produtos = cursor_para_lista_dict(
                 conn.cursor().execute(Query.produtostabela(tabela=tabela_preco[0].get("TABELA"))))
@@ -519,14 +521,22 @@ def relatorio_de_compras(repre, cli, top):
     return lista_clientes
 
 
-def relatorio_cliente(repre, cli, top):
+def relatorio_cliente(**kwargs):
+    query = {}
+    if kwargs.get('repre') != '00000':
+        query['supervisores'] = kwargs.get('repre')
+    if kwargs.get('cli') != '00000':
+        query['cliente'] = kwargs.get('cli')
+    if kwargs.get('cnpj_cpf'):
+        query['cnpj_cpf'] = kwargs.get('cnpj_cpf')
+    top = kwargs.get('top')
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
     item_bd = mongo_client.get_database("prowater") \
         .get_collection("relatorio_de_compras") \
-        .find_one({"cliente": cli, "supervisores": repre})
+        .find_one(query)
     if item_bd is None:
-        item_bd = relatorio_de_compras(repre, cli, top)
+        item_bd = relatorio_de_compras(query.get('supervisores'), query.get('cliente'), query.get('cnpj_cpf'), top)
         return item_bd
     return json.loads(dumps(item_bd, default=json_util.default))
 

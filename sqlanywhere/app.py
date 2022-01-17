@@ -20,7 +20,7 @@ Session(app)
 CORS(app)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-#spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
+# spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
 spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
 sheet_id = "0"
 json_file = "prowater-177d3-e29737f9229f.json"
@@ -203,9 +203,10 @@ def vendedores():
 def historico_cliente():
     cliente = request.form['cliente']
     representante = request.form['representante']
+    cnpj_cpf = request.form['cnpj_cpf']
     cliente = '0' * (5 - len(cliente)) + cliente
     representante = '0' * (5 - len(representante)) + representante
-    res = Prowater.relatorio_cliente(cli=cliente, repre=representante, top=6)
+    res = Prowater.relatorio_cliente(cli=cliente, repre=representante, cnpj_cpf=cnpj_cpf, top=6)
     return json.jsonify(res)
 
 
