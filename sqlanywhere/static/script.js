@@ -169,7 +169,7 @@ function handler_cliente() {
     cnpj_cpf.prop("disabled",false);
   }
   if (repre !== '' && (cli.val() !== '' || cnpj_cpf.val() !== '')) {
-    $("#texto_enviando").text("Carregando Informções do cliente");
+    $("#texto_enviando").text("Carregando Informações do cliente");
     M.Modal.getInstance($("#modal_enviando")).open();
     $.post("/historico_cliente", {cliente: cli.val(), representante: repre, cnpj_cpf: cnpj_cpf.val()}, function (data) {
       repre_nome.html(data.representante_nome);
