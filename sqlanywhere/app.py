@@ -338,5 +338,10 @@ def aplicacaor():
     return json.jsonify(Prowater.aplicacaor())
 
 
+@app.route('/custos', methods=["GET", "POST"])
+def custos():
+    return json.jsonify(Prowater.custos())
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

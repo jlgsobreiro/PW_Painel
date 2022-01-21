@@ -544,13 +544,27 @@ def relatorio_cliente(**kwargs):
 def aplicacaop():
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     res = conn.cursor().execute(Query.aplicacaop())
-    return cursor_para_lista_dict(res)
+    cursor_res = cursor_para_lista_dict(res)
+    conn.close()
+    return cursor_res
 
 
 def aplicacaor():
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     res = conn.cursor().execute(Query.aplicacaor())
-    return cursor_para_lista_dict(res)
+    cursor_res = cursor_para_lista_dict(res)
+    conn.close()
+    return cursor_res
+
+
+def custos():
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    res = None
+    for linha in Query.custos():
+        res = conn.cursor().execute(linha)
+    cursor_res = cursor_para_lista_dict(res)
+    conn.close()
+    return cursor_res
 
 
 class Exportar:
