@@ -325,7 +325,6 @@ def resumo():
         return {"res": "Produtos não enviados"}
     finally:
         escritor([representante, cliente, data_entrega, forma_de_pagamento, produtos, observcoes])
-        # render_template("home.html", title="boas", produtos=produtos)
 
 
 @app.route('/aplicacaop', methods=["GET", "POST"])

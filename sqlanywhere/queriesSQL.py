@@ -435,7 +435,7 @@ def aplicacaor():
             "IF END IF END IF as NF_STATUS, PARCELA, CODIGOAPLICACAO, CODIGOCATEGORIA, dateformat(EMISSAO,'yyyy-mm-dd') as EMISSAO, dateformat(VENCIMENTO,'yyyy-mm-dd') as VENCIMENTO, "
             "dateformat(RECEBIMENTO,'yyyy-mm-dd') as RECEBIMENTO, cast(VALOR as float) as VALOR, cast(VALORDESCONTO as float) as VALORDESCONTO, cast(VALORACRESCIMO as float) as VALORACRESCIMO, dateformat(EMISSAO,'yyyy-mm') as ANO_MES"
             " from  AplicacaoR left join VNDANFCD on numero = RIGHT(ANFCD_NUM_NOTA,"
-            "8) AND CODIGOEMP = ANFCD_EMPRESA where datediff(year,EMISSAO,cast(20210101 as DATETIME)) <= 0 order by "
+            "8) AND CODIGOEMP = ANFCD_EMPRESA where datediff(year,EMISSAO,cast(20190101 as DATETIME)) <= 0 order by "
             "Emissao desc")
 
 
@@ -444,7 +444,7 @@ def aplicacaop():
             "NUMERO,PARCELA, CODIGOAPLICACAO, CODIGOCATEGORIA, dateformat(EMISSAO,'yyyy-mm-dd') as EMISSAO, dateformat(VENCIMENTO,'yyyy-mm-dd') as VENCIMENTO, dateformat(RECEBIMENTO,'yyyy-mm-dd') as RECEBIMENTO, cast(VALOR as float) as VALOR, cast(VALORDESCONTO as float) as VALORDESCONTO, "
             "cast(VALORACRESCIMO as float) as VALORACRESCIMO,dateformat(EMISSAO,'yyyy-mm') as ANO_MES "
             "from AplicacaoP left join SUPAEMPR on AEMPR_TIPO = TIPOEMPRESA AND AEMPR_CODIGO = CODIGOEMPRESA "
-            "where datediff(year,EMISSAO,cast(20210101 as DATETIME)) <= 0")
+            "where datediff(year,EMISSAO,cast(20190101 as DATETIME)) <= 0")
 
 def custos():
     return ["SELECT * into #ADMANRMI FROM ADMANRMI WHERE ANRMI_DATA_COTACAO >20190000 AND ANRMI_COD_ITEM<9999;",
@@ -460,4 +460,4 @@ def custos():
 "select  ADFIT_COD_ITEM as ITEM, ADFIT_DESCRICAO as \"DESC\", CAST (AORCA_DATA as DATETIME) as EPOCA, AORCA_VALOR_UNI_01/AORCA_QTD_ORCADA as UN INTO #orca from  ORCAORCA JOIN VNDADFIT ON   ADFIT_COD_ITEM = AORCA_COD_ITEM  ORDER BY  AORCA_DATA DESC;",
 "select  trim(ADFIT_COD_ITEM) as COD_ITEM, ADFIT_DESCRICAO as \"DESC\", CAST (AORCA_DATA as DATETIME) as EPOCA, AORCA_VALOR_UNI_01/AORCA_QTD_ORCADA as UNI into #orcamento from  ORCAORCA, VNDADFIT  where  ADFIT_COD_ITEM = AORCA_COD_ITEM  AND  UNI <= (select avg(UN)*3 from #orca WHERE ITEM = COD_ITEM) ORDER BY  AORCA_DATA DESC;",
 "select  ANFCD_CLIENTE as CLI,ANFCD_NUM_NOTA as NOTA, sum(ANFLN_QTD_ENTR) as QTD, CAST(ANFCD_DATA_EMISSAO as DATETIME) as PERIODO, ANFLN_PRODUTO as PRODUTO, sum((select FIRST TOTAL from #customp where ANFLN_PRODUTO = CODIGO AND cast(ANFCD_DATA_EMISSAO as DATETIME)>= DT)*ANFLN_QTD_ENTR) as CUSTOMP,sum((select FIRST UNI from #orcamento o where ANFLN_PRODUTO = o.COD_ITEM AND cast(ANFCD_DATA_EMISSAO as DATETIME)>= o.EPOCA)*ANFLN_QTD_ENTR) as CUSTOMP_ORCA into #pc_cl from #VNDANFLN, #VNDANFCD, VIEWROTAREPRESENTANTE nte WHERE  ANFCD_EMPRESA = ANFLN_EMPRESA AND ANFCD_NUM_NOTA = ANFLN_NUM_NOTA AND nte.Codigo = CLI AND  CLI!='00001' AND CLI!='00002' AND  CLI!='02058' GROUP BY  ANFLN_EMPRESA, ANFCD_REPRE, ANFCD_CLIENTE,  PERIODO, NOTA, ANFCD_TIPO_OPER, nte.Zona, nte.Mercado, nte.Rota, nte.Fantasia, ANFCD_TOT_NOTA, PRODUTO order by PERIODO DESC;",
-"SELECT  dateformat(cast(PERIODO as DATETIME),'yyyy-mm') as PERIODO, PRODUTO, (select trim(ADFIT_DESCRICAO) from #VNDADFIT where trim(ADFIT_COD_ITEM) = PRODUTO) as DESC_PROD,cast(sum(QTD) as int) as QTD,cast( if isnull(sum(CUSTOMP),0)> isnull(sum(CUSTOMP_ORCA),0) then sum(CUSTOMP) ELSE sum(CUSTOMP_ORCA) endif as float) as CUSTOMP, cast(CUSTOMP/QTD as float) as CUSTO_UNITARIO FROM #pc_cl WHERE CLI!='00001' AND CLI!='00002' AND  CLI!='02058' AND  dateformat(cast(PERIODO as DATETIME),'yyyy') >=2020 GROUP BY PERIODO, PRODUTO ORDER BY PERIODO DESC;"]
+"SELECT  dateformat(cast(PERIODO as DATETIME),'yyyy-mm') as PERIODO, PRODUTO, (select trim(ADFIT_DESCRICAO) from #VNDADFIT where trim(ADFIT_COD_ITEM) = PRODUTO) as DESC_PROD,cast(sum(QTD) as int) as QTD,cast( if isnull(sum(CUSTOMP),0)> isnull(sum(CUSTOMP_ORCA),0) then sum(CUSTOMP) ELSE sum(CUSTOMP_ORCA) endif as float) as CUSTOMP, cast(CUSTOMP/QTD as float) as CUSTO_UNITARIO FROM #pc_cl WHERE CLI!='00001' AND CLI!='00002' AND  CLI!='02058' AND  dateformat(cast(PERIODO as DATETIME),'yyyy') >=2019 GROUP BY PERIODO, PRODUTO ORDER BY PERIODO DESC;"]
