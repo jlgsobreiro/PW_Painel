@@ -211,7 +211,10 @@ function handler_cliente() {
  function handle_tabela(tabela) {
   "use strict";
   for (let i = 0; i < items.length; i++) {
-    let achado = tabela.find(elem => elem.ITEM === items[i].codigo);
+    let achado;
+    if (tabela){
+     let achado = tabela.find(elem => elem.ITEM === items[i].codigo);
+    }
     if (achado !== undefined){
       items[i].tabela = achado.VALOR;
     } else {
