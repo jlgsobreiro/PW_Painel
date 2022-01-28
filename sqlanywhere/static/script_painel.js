@@ -39,6 +39,9 @@ let total_ped;
 let desconto_ped;
 let desconto_max;
 let lista_auto;
+let stopper_clientes = 0;
+let stopper_historico = 0;
+let ultimo_cliete = '';
 function onload_tabela(produtos){
   "use strict";
   items = produtos;
@@ -153,7 +156,14 @@ function handler_cliente() {
   let cli_nome = $("#cliente_nome");
   let repre_nome = $("#representante_nome");
   var instance = M.Autocomplete.getInstance(cli_nome);
-  if (repre !== ''){
+  if (ultimo_cliete === cli.val()){
+    stopper_clientes += 1;
+    stopper_historico += 1;
+  } else {
+    stopper_clientes = 0;
+    stopper_historico = 0;
+  }
+  if (repre !== '' && stopper_clientes<2){
     $.post("/clientes",{representante:repre},function (data) {
       let lista = {};
       lista_auto = {};
@@ -168,7 +178,7 @@ function handler_cliente() {
     cli_nome.prop("disabled",false);
     cnpj_cpf.prop("disabled",false);
   }
-  if (repre !== '' && (cli.val() !== '' || cnpj_cpf.val() !== '')) {
+  if (repre !== '' && (cli.val() !== '' || cnpj_cpf.val() !== '') && stopper_clientes < 2) {
     $("#texto_enviando").text("Carregando Informações do cliente");
     M.Modal.getInstance($("#modal_enviando")).open();
     $.post("/historico_cliente", {cliente: cli.val(), representante: repre, cnpj_cpf: cnpj_cpf.val()}, function (data) {
@@ -201,11 +211,11 @@ function handler_cliente() {
  function handle_tabela(tabela) {
   "use strict";
   for (let i = 0; i < items.length; i++) {
-    items[i].tabela = items[i].valor;
-  }
-  if (tabela){
-    for (let i = 0; i < items.length; i++) {
-     items[i].tabela = tabela.find(elem => elem.ITEM === items[i].codigo).VALOR;
+    let achado = tabela.find(elem => elem.ITEM === items[i].codigo);
+    if (achado !== undefined){
+      items[i].tabela = achado.VALOR;
+    } else {
+      items[i].tabela = items[i].valor;
     }
   }
  }
