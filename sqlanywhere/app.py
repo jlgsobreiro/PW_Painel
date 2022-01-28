@@ -223,28 +223,30 @@ def painel():
         conn.close()
         return lista_tabela_preco
 
-    tabela = tabelaprecos()
-    if len(tabela) == 0:
-        tabela = [{"codigo": '011009', "valor": 43.08},
-                  {"codigo": '011001', "valor": 47.60},
-                  {"codigo": '011005', "valor": 55.80},
-                  {"codigo": '012010', "valor": 45.60},
-                  {"codigo": '012003', "valor": 53.60},
-                  {"codigo": '021002', "valor": 33.00},
-                  {"codigo": '021006', "valor": 38.32},
-                  {"codigo": '021007', "valor": 43.88},
-                  {"codigo": '022004', "valor": 38.16},
-                  {"codigo": '022008', "valor": 39.92},
-                  {"codigo": '031011', "valor": 51.00},
-                  {"codigo": '031014', "valor": 98.40},
-                  {"codigo": '031013', "valor": 373.90},
-                  {"codigo": '041017', "valor": 28.20},
-                  {"codigo": '042020', "valor": 28.20},
-                  {"codigo": '043018', "valor": 28.20},
-                  {"codigo": '051021', "valor": 79.20},
-                  {"codigo": '051022', "valor": 83.70}
-                  ]
-    return render_template("home.html", title="boas", produtos=[
+    try:
+        tabela = tabelaprecos()
+    except:
+        tabela = [
+            {"codigo": '011009', "valor": 43.08},
+            {"codigo": '011001', "valor": 47.60},
+            {"codigo": '011005', "valor": 55.80},
+            {"codigo": '012010', "valor": 45.60},
+            {"codigo": '012003', "valor": 53.60},
+            {"codigo": '021002', "valor": 33.00},
+            {"codigo": '021006', "valor": 38.32},
+            {"codigo": '021007', "valor": 43.88},
+            {"codigo": '022004', "valor": 38.16},
+            {"codigo": '022008', "valor": 39.92},
+            {"codigo": '031011', "valor": 51.00},
+            {"codigo": '031014', "valor": 98.40},
+            {"codigo": '031013', "valor": 373.90},
+            {"codigo": '041017', "valor": 28.20},
+            {"codigo": '042020', "valor": 28.20},
+            {"codigo": '043018', "valor": 28.20},
+            {"codigo": '051021', "valor": 79.20},
+            {"codigo": '051022', "valor": 83.70}
+        ]
+    return render_template("painel.html", title="Painel", produtos=[
         {"id": 1, "descricao": "CT-1", "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
          "codigo": '011009'},
         {"id": 2, "descricao": "CT-2", "valor": [item for item in tabela if item['codigo'] == '011001'][0]['valor'],
