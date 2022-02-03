@@ -63,10 +63,10 @@ def escritor(lista):
         ab1_valor += produto['pedido'] if produto['codigo'] == '022004' else 0
         ab2 += produto['quantidade'] if produto['codigo'] == '022008' else 0
         ab2_valor += produto['pedido'] if produto['codigo'] == '022008' else 0
-        cb1 += produto['quantidade'] if produto['codigo'] == '012003' else 0
-        cb1_valor += produto['pedido'] if produto['codigo'] == '012003' else 0
-        cb2 += produto['quantidade'] if produto['codigo'] == '012010' else 0
-        cb2_valor += produto['pedido'] if produto['codigo'] == '012010' else 0
+        cb1 += produto['quantidade'] if produto['codigo'] == '012010' else 0
+        cb1_valor += produto['pedido'] if produto['codigo'] == '012010' else 0
+        cb2 += produto['quantidade'] if produto['codigo'] == '012003' else 0
+        cb2_valor += produto['pedido'] if produto['codigo'] == '012003' else 0
         esp1 += produto['quantidade'] if produto['codigo'] == '031011' else 0
         esp_valor += produto['pedido'] if produto['codigo'] == '031011' else 0
         esp3 += produto['quantidade'] if produto['codigo'] == '031014' else 0
