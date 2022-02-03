@@ -37,7 +37,8 @@ def clientefantasia(codigo):
 def cursor_para_lista_dict(cursor):
     colunas = [coluna[0] for coluna in cursor.description]
     linhas = []
-    for linha in cursor.fetchall():
+    x = cursor.fetchall()
+    for linha in x:
         linhas.append(dict(zip(colunas, linha)))
     return linhas
 
