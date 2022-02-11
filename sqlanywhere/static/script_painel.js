@@ -282,7 +282,7 @@ function handler_cliente() {
 
 function handle_cobrancas(cobs){
   "use strict";
-  if (cobs.length === 0){
+  if (cobs.length === undefined || cobs.length === 0){
     $('#atrasado_header').addClass("hide");
   } else {
     cobs.sort((a,b) => {
