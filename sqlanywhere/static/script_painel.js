@@ -181,29 +181,36 @@ function handler_cliente() {
   if (repre !== '' && (cli.val() !== '' || cnpj_cpf.val() !== '') && stopper_clientes < 2) {
     $("#texto_enviando").text("Carregando Informações do cliente");
     M.Modal.getInstance($("#modal_enviando")).open();
-    $.post("/historico_cliente", {cliente: cli.val(), representante: repre, cnpj_cpf: cnpj_cpf.val()}, function (data) {
-      repre_nome.html(data.representante_nome);
-      cli_nome.val(data.fantasia);
-      $('#cliente_nome_label').addClass('active');
-      if (cli.val() === ''){
-        cli.val(data.cliente);
-        $('#cliente_label').addClass('active');
-      }
-      if (cnpj_cpf.val() === ''){
-        cnpj_cpf.val(data.cnpj_cpf);
-        $('#cnpj_cpf_label').addClass('active');
-      }
-      repre_nome.removeClass("hide");
-      $("#cliente_nome_label").addClass("active");
-      handle_cobrancas(data.cobrancas);
-      handle_historico(data.historico);
-      handle_tabela(data.tabela);
-      habilita_resumo();
-    }).done(function () {
-      M.Modal.getInstance($("#modal_enviando")).close();
-    }).fail(function () {
-      M.Modal.getInstance($("#modal_enviando")).close();
-      M.toast({html: "Erro ao consultar cliente"});
+    $.post("/historico_cliente", {cliente: cli.val(), representante: repre, cnpj_cpf: cnpj_cpf.val()})
+      .then(function (data) {
+        if (data !== null){
+          repre_nome.html(data.representante_nome);
+          cli_nome.val(data.fantasia);
+          $('#cliente_nome_label').addClass('active');
+          if (cli.val() === '') {
+            cli.val(data.cliente);
+            $('#cliente_label').addClass('active');
+          }
+          if (cnpj_cpf.val() === '') {
+            cnpj_cpf.val(data.cnpj_cpf);
+            $('#cnpj_cpf_label').addClass('active');
+          }
+          repre_nome.removeClass("hide");
+          $("#cliente_nome_label").addClass("active");
+          handle_cobrancas(data.cobrancas);
+          handle_historico(data.historico);
+          handle_tabela(data.tabela);
+          habilita_resumo();
+        } else {
+          $.Deferred().reject(data);
+        }
+      })
+      .done(function () {
+        M.Modal.getInstance($("#modal_enviando")).close();
+      })
+      .fail(function () {
+        M.Modal.getInstance($("#modal_enviando")).close();
+        M.toast({html: "Erro ao consultar cliente"});
     });
   }
  }
@@ -282,7 +289,7 @@ function handler_cliente() {
 
 function handle_cobrancas(cobs){
   "use strict";
-  if (cobs.length === undefined || cobs.length === 0){
+  if (cobs === undefined){
     $('#atrasado_header').addClass("hide");
   } else {
     cobs.sort((a,b) => {

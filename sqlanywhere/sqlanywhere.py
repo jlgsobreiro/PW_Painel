@@ -9,6 +9,8 @@ import queriesSQL as Query
 import pymongo
 
 """Retorna email"""
+
+
 def getEmails(codigo: any, tipo: str):
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     emails = conn.cursor().execute(Query.emailporcodigo(codigo, tipo))
@@ -472,7 +474,7 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top):
         quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
         if item_bd is not None:
             qtd_h = item_bd.get('qtd_historico') if item_bd.get('qtd_historico') is not None else 0
-            if qtd_h != quantidade_historico:
+            if qtd_h != quantidade_historico or len(item_bd.get('historico')) != top:
                 for query in Query.historiconotas(cliente=cli):
                     historico_mem = conn.cursor().execute(query)
                 historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
@@ -537,8 +539,11 @@ def relatorio_cliente(**kwargs):
         .get_collection("relatorio_de_compras") \
         .find_one(query)
     if item_bd is None:
-        item_bd = relatorio_de_compras(query.get('supervisores'), query.get('cliente'), query.get('cnpj_cpf'), top)
-        return item_bd
+        try:
+            item_bd = relatorio_de_compras(query.get('supervisores'), query.get('cliente'), query.get('cnpj_cpf'), top)
+            return item_bd
+        except:
+            return json.loads(dumps(item_bd, default=json_util.default))
     return json.loads(dumps(item_bd, default=json_util.default))
 
 
@@ -566,6 +571,22 @@ def custos():
     cursor_res = cursor_para_lista_dict(res)
     conn.close()
     return cursor_res
+
+
+def representante_info(**kwargs):
+    codigo = f" AND AEMPR_CODIGO = {kwargs.get('codigo')} " if kwargs.get('codigo') is not None else ''
+    cnpj_cpf = f" AND (if AEMPR_CGC_CPF = 'F' then AEMPR_CPF else AEMPR_CGC ENDIF) = {kwargs.get('cnpj_cpf')}" if kwargs.get(
+        'cnpj_cpf') else ''
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    query = f"SELECT * FROM SUPAEMPR WHERE AEMPR_TIPO = 'R' {codigo} {cnpj_cpf}"
+    consulta = conn.cursor().execute(query)
+    teste = cursor_para_lista_dict(consulta)
+
+    conn.close()
+    if teste:
+        return teste[0]
+    else:
+        return None
 
 
 class Exportar:
