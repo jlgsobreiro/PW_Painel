@@ -1,7 +1,9 @@
 from datetime import datetime
 
 import flask.json as json
-from flask import Flask, request, session, render_template, url_for
+import pymongo
+from flask import Flask, request, session, render_template, url_for, redirect
+import flask_login
 from flask_cors import CORS
 
 import queriesSQL
@@ -213,14 +215,21 @@ def historico_cliente():
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     def tabelaprecos():
-        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-        tabela_preco = conn.cursor().execute(queriesSQL.tabela4())
-        lista_tabela_preco = []
-        for item in tabela_preco:
-            temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),
-                    "tabela": item.TABELA}
-            lista_tabela_preco.append(temp)
-        conn.close()
+        conn_mg = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+        mongo_client = pymongo.MongoClient(conn_mg)
+        tabela = mongo_client.get_database("prowater").get_collection("tabela_precos").find(
+            {"mes": datetime.now().month, "ano": datetime.now().year})
+        lista_tabela_preco = list(tabela)
+        if len(lista_tabela_preco)==0:
+            conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            tabela_preco = conn.cursor().execute(queriesSQL.tabela4())
+            lista_tabela_preco = []
+            for item in tabela_preco:
+                temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),
+                        "tabela": item.TABELA, "mes": datetime.now().month, "ano": datetime.now().year}
+                mongo_client.get_database("prowater").get_collection("tabela_precos").insert_one(temp)
+                lista_tabela_preco.append(temp)
+            conn.close()
         return lista_tabela_preco
 
     try:
