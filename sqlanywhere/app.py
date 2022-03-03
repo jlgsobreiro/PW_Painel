@@ -3,7 +3,7 @@ from datetime import datetime
 import flask.json as json
 import pymongo
 from flask import Flask, request, session, render_template, url_for, redirect
-import flask_login
+
 from flask_cors import CORS
 
 import queriesSQL
