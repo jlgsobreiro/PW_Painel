@@ -409,6 +409,10 @@ function cria_pdf(){
       for (let i =0; i<items.length; i++){
         zerar(items[i].id);
       }
+      $("#representante").val('');
+      $("#cliente").val('');
+      $("#cnpj_cpf").val('');
+      $("#cliente_nome").val('');
     } else {
       M.toast({html:"Houve algum erro"});
     }
