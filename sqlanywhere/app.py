@@ -90,8 +90,13 @@ def escritor(lista):
     agora = f"{datetime.now().day}/{datetime.now().month}/{datetime.now().year} " \
             f"{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}"
     observacoes = lista[5]
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    rep_cod = '0' * (5 - len(representante)) + representante
+    representante_nome = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find_one(
+        {"representante": rep_cod})['representante_nome']
 
-    linha = [agora, f"({representante})" + sqlanywhere.representante(representante)["fantasia"], cliente, data_entrega,
+    linha = [agora, f"({representante})" + representante_nome, cliente, data_entrega,
              forma_pagamento, '', '', '', ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
              at2, at2_valor, at5, at5_valor, '', ab1, ab1_valor, ab2, ab2_valor, cb1, cb1_valor, cb2, cb2_valor, '',
              esp1, esp_valor, esp3, esp3_valor, esp4, esp4_valor, '', sens, sens_valor, affe, affe_valor,

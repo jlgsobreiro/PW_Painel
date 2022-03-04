@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta
 
 from bson import json_util
 from bson.json_util import loads, dumps
@@ -474,7 +475,7 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top):
         quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
         if item_bd is not None:
             qtd_h = item_bd.get('qtd_historico') if item_bd.get('qtd_historico') is not None else 0
-            if qtd_h != quantidade_historico or len(item_bd.get('historico')) != top:
+            if qtd_h != quantidade_historico:
                 for query in Query.historiconotas(cliente=cli):
                     historico_mem = conn.cursor().execute(query)
                 historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
@@ -501,8 +502,23 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top):
             "qtd_historico": quantidade_historico,
             "cnpj_cpf": item.CNPJ_CPF
         }
-        if historico:
-            temp['historico'] = historico[:top]
+        if len(historico) > 0:
+            filtro = [data for data in historico if data.get('data') >= datetime.now() - timedelta(days=365)]
+            temp['historico'] = filtro[:top]
+            if len(filtro) > 1:
+                entre_compras = []
+                for venda in range((len(filtro) - 1)):
+                    entre_compras.append(
+                        filtro[venda].get('data') - filtro[venda + 1].get('data'))
+                media_compra = timedelta(days=0)
+                for tempo in entre_compras:
+                    media_compra += tempo
+                temp['media_compras'] = int(media_compra.days / len(filtro))
+                temp['ataque'] = temp['tmp_fat'] + (
+                            (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))
+            else:
+                temp['media_compras'] = 21
+                temp['ataque'] = temp['tmp_fat'] + timedelta(days=14)
         tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=clinte[0].strip())))
         if tabela_preco:
             lista_produtos = cursor_para_lista_dict(

@@ -401,6 +401,9 @@ function cria_pdf(){
   M.Modal.getInstance($("#modal1")).close();
   $("#texto_enviando").text("Por favor aguarde, seu pedido está sendo enviado.");
   M.Modal.getInstance($("#modal_enviando")).open();
+  $.ajaxSetup({
+    timeout: 30
+  });
   $.post("/resumo", {cliente: cli, representante: repre, items: items, numero: items.length,
       pagamento: forma_de_pagamento, data_entrega: data_entrega, observacoes: observacoes},
     function (data) {
