@@ -93,14 +93,17 @@ def escritor(lista):
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
     rep_cod = '0' * (5 - len(representante)) + representante
+    cliente_cod = '0' * (5 - len(cliente)) + cliente
     representante_nome = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find_one(
         {"representante": rep_cod})['representante_nome']
+    fantasia_cliente = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find_one(
+        {"cliente": cliente_cod})['fantasia']
 
     linha = [agora, f"({representante})" + representante_nome, cliente, data_entrega,
              forma_pagamento, '', '', '', ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
              at2, at2_valor, at5, at5_valor, '', ab1, ab1_valor, ab2, ab2_valor, cb1, cb1_valor, cb2, cb2_valor, '',
              esp1, esp_valor, esp3, esp3_valor, esp4, esp4_valor, '', sens, sens_valor, affe, affe_valor,
-             lamo, lamo_valor, '', sd40, sd40_valor, sd1k, sd1k_valor, '', sqlanywhere.clientefantasia(cliente),
+             lamo, lamo_valor, '', sd40, sd40_valor, sd1k, sd1k_valor, '', fantasia_cliente,
              '', '', '', total, '', '', '', observacoes, '', '']
     gc = login_sheets()
 
