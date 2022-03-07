@@ -486,8 +486,6 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top):
                 historico_mem = conn.cursor().execute(query)
             historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
             historico_mem.close()
-        if len(historico) > 1:
-            historico = sorted(historico, key=lambda k: k['data'], reverse=True)
         temp = {
             "representante": item.REPRE,
             "representante_nome": repre_dados.get("fantasia"),
@@ -502,7 +500,8 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top):
             "qtd_historico": quantidade_historico,
             "cnpj_cpf": item.CNPJ_CPF
         }
-        if len(historico) > 0:
+        if len(historico) > 1:
+            historico = sorted(historico, key=lambda k: k['data'], reverse=True)
             filtro = [data for data in historico if data.get('data') >= datetime.now() - timedelta(days=365)]
             temp['historico'] = filtro[:top]
             if len(filtro) > 1:
