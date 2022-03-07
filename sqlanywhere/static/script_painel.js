@@ -416,7 +416,16 @@ function cria_pdf(){
     } else {
       M.toast({html:"Houve algum erro"});
     }
-    M.Modal.getInstance($("#modal_enviando")).close();
+  })
+    .done(function (data){
+      if (data.res !== 200){
+        M.toast({html:"Houve algum erro"});
+      }
+    })
+    .fail( function (){
+      M.toast({html:"Houve algum erro"});
+    }).always(function () {
+      M.Modal.getInstance($("#modal_enviando")).close();
   });
 }
 
