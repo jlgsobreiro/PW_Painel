@@ -8,11 +8,3 @@ $(document).ready(function(){
 
 function onload_tabela() {}
 
-function login() {
-  "use strict";
-  let cnpj_cpf = $("#cnpj_cpf").val();
-  let codigo = $("#codigo").val();
-  $.post("/login",{cnpj_cpf: cnpj_cpf, codigo: codigo}, function (data){
-    console.log(data)
-  });
-}
