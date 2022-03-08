@@ -453,7 +453,7 @@ def supervisores(repre):
     return superv
 
 
-def relatorio_de_compras(repre, cli, cnpj_cpf, top):
+def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
@@ -473,15 +473,21 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top):
         historico = []
         cobs = selecionaCobranca(None, cliente=clinte[0].strip())
         quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
-        if item_bd is not None:
-            qtd_h = item_bd.get('qtd_historico') if item_bd.get('qtd_historico') is not None else 0
-            if qtd_h != quantidade_historico:
+        if not forcar:
+            if item_bd is not None:
+                qtd_h = item_bd.get('qtd_historico') if item_bd.get('qtd_historico') is not None else 0
+                if qtd_h != quantidade_historico:
+                    for query in Query.historiconotas(cliente=cli):
+                        historico_mem = conn.cursor().execute(query)
+                    historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
+                    historico_mem.close()
+            else:
+                print(f"Novo cliente: {clinte[0].strip()}")
                 for query in Query.historiconotas(cliente=cli):
                     historico_mem = conn.cursor().execute(query)
                 historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
                 historico_mem.close()
         else:
-            print(f"Novo cliente: {clinte[0].strip()}")
             for query in Query.historiconotas(cliente=cli):
                 historico_mem = conn.cursor().execute(query)
             historico = historicofaturamento(historico_mem, cliente=clinte[0].strip())
