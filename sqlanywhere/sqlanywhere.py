@@ -520,7 +520,7 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
                     media_compra += tempo
                 temp['media_compras'] = int(media_compra.days / len(filtro))
                 temp['ataque'] = temp['tmp_fat'] + (
-                            (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))
+                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))
             else:
                 temp['media_compras'] = 21
                 temp['ataque'] = temp['tmp_fat'] + timedelta(days=14)
@@ -608,6 +608,16 @@ def representante_info(**kwargs):
         return teste[0]
     else:
         return None
+
+
+def atualiza_tabela4(conn, mongo_client):
+    tabela_preco = conn.cursor().execute(Query.tabela4())
+    for item in tabela_preco:
+        temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),
+                "tabela": item.TABELA}
+        mongo_client.get_database("prowater").get_collection("tabela_precos").update_one({"codigo": temp.get('codigo')},
+                                                                                         {"$set": temp}, upsert=True)
+    conn.close()
 
 
 class Exportar:

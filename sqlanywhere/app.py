@@ -223,21 +223,15 @@ def historico_cliente():
 @app.route('/painel', methods=["GET", "POST"])
 def painel():
     def tabelaprecos():
-        conn_mg = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+        conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
+                   "directConnection=true&ssl=false")
         mongo_client = pymongo.MongoClient(conn_mg)
-        tabela = mongo_client.get_database("prowater").get_collection("tabela_precos").find(
+        tabela_base = mongo_client.get_database("prowater").get_collection("tabela_precos").find(
             {"mes": datetime.now().month, "ano": datetime.now().year})
-        lista_tabela_preco = list(tabela)
-        if len(lista_tabela_preco)==0:
+        lista_tabela_preco = list(tabela_base)
+        if len(lista_tabela_preco) == 0:
             conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-            tabela_preco = conn.cursor().execute(queriesSQL.tabela4())
-            lista_tabela_preco = []
-            for item in tabela_preco:
-                temp = {"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),
-                        "tabela": item.TABELA, "mes": datetime.now().month, "ano": datetime.now().year}
-                mongo_client.get_database("prowater").get_collection("tabela_precos").insert_one(temp)
-                lista_tabela_preco.append(temp)
-            conn.close()
+            Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
         return lista_tabela_preco
 
     try:
@@ -359,6 +353,16 @@ def aplicacaor():
 @app.route('/custos', methods=["GET", "POST"])
 def custos():
     return json.jsonify(Prowater.custos())
+
+
+@app.route('/admin', methods=["GET", "POST"])
+def admin():
+    conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
+               "directConnection=true&ssl=false")
+    mongo_client = pymongo.MongoClient(conn_mg)
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
+    return render_template("admin.html", tittle="Admin")
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
 clientes = conn.cursor().execute(
     "select AEMPR_CODIGO as COD,AEMPR_REPR as REPRE, if(AEMPR_CGC_CPF = 'F') then AEMPR_CPF ELSE AEMPR_CGC ENDIF as CNPJ_CPF from SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_STATUS = 'A' ORDER BY AEMPR_DT_CADASTRO DESC ")
 for cliente in clientes:
-    sql.relatorio_de_compras(repre=cliente.REPRE, cli=cliente.COD, cnpj_cpf=cliente.CNPJ_CPF, top=6, forcar=True)
+    sql.relatorio_de_compras(repre=cliente.REPRE, cli=cliente.COD, cnpj_cpf=cliente.CNPJ_CPF, top=6, forcar=False)
 conn.close()
 file.write(f"Fechando: {datetime.datetime.now().ctime()}\n")
 file.close()
