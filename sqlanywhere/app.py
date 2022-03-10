@@ -226,8 +226,7 @@ def painel():
         conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
                    "directConnection=true&ssl=false")
         mongo_client = pymongo.MongoClient(conn_mg)
-        tabela_base = mongo_client.get_database("prowater").get_collection("tabela_precos").find(
-            {"mes": datetime.now().month, "ano": datetime.now().year})
+        tabela_base = mongo_client.get_database("prowater").get_collection("tabela_precos").find()
         lista_tabela_preco = list(tabela_base)
         if len(lista_tabela_preco) == 0:
             conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
