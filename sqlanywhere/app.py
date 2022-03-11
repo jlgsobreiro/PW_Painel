@@ -27,8 +27,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
-# spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
+#spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
+spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
 sheet_id = "0"
 json_file = "prowater-177d3-e29737f9229f.json"
 
