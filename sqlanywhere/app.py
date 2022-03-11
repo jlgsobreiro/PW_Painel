@@ -5,6 +5,7 @@ import pymongo
 from flask import Flask, request, session, render_template, url_for, redirect
 
 from flask_cors import CORS
+from flask_login import LoginManager, login_user, login_required, current_user, logout_user
 
 import queriesSQL
 import sqlanywhere
@@ -15,15 +16,19 @@ from google.oauth2 import service_account
 import sqlanywhere as Prowater
 import pyodbc
 
+from user import Usuario
+
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 CORS(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-# spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
-spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
+spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
+# spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
 sheet_id = "0"
 json_file = "prowater-177d3-e29737f9229f.json"
 
@@ -108,14 +113,53 @@ def escritor(lista):
     gc = login_sheets()
 
     planilha = gc.open_by_key(spreadsheet_id)
-    # planilha = planilha.get_worksheet_by_id(865878295)
     planilha = planilha.get_worksheet_by_id(865878295)
     planilha.insert_row(linha, len(planilha.get_values()) + 1, value_input_option='USER_ENTERED')
 
 
 @app.route('/', methods=["GET", "POST"])
 def home():
-    return "Olá"
+    erro = False
+    if request.method == 'POST':
+        codigo = request.form.get("codigo")
+        codigo = '0' * (5 - len(codigo)) + codigo
+        cnpj_cpf = request.form.get("cnpj_cpf")
+        lembrar = request.form.get("lembrar")
+        usuario = Usuario(codigo=codigo, cnpj_cpf=cnpj_cpf)
+        if usuario.info:
+            login_user(usuario, lembrar)
+            return redirect(url_for("perfil"))
+        else:
+            erro = True
+    return render_template("login.html", title="Home", erro=erro)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario(codigo=None, cnpj_cpf=user_id)
+
+
+@app.route('/perfil', methods=["GET", "POST"])
+@login_required
+def perfil():
+    if request.method == "POST":
+        if request.form.get('sair'):
+            logout_user()
+            return redirect('/')
+    nome = current_user.info.get("AEMPR_NOME_ABREV")
+    qtd_pedidos = current_user.qtd_pedidos
+    vlr_pedidos = current_user.vlr_pedidos
+    qtd_clientes = current_user.qtd_clientes
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    clientes = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find(
+        {"supervisores": current_user.info.get('AEMPR_CODIGO')})
+    print(clientes.count())
+    lista_clientes = list(clientes)
+    lista_clientes = [r for r in lista_clientes if r.get('ataque') <= datetime.now()]
+    lista_clientes = sorted(lista_clientes, key=lambda k: k['ataque'], reverse=True)
+    return render_template("perfil.html", nome=nome, qtd_pedidos=qtd_pedidos, vlr_pedidos=vlr_pedidos,
+                           qtd_clientes=qtd_clientes, clientes=lista_clientes)
 
 
 @app.route('/cliente', methods=["GET", "POST"])
