@@ -103,7 +103,7 @@ def escritor(lista):
         {"representante": rep_cod})['representante_nome']
     fantasia_cliente = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find_one(
         {"cliente": cliente_cod})['fantasia']
-
+    print(f"{rep_cod} : {cliente_cod} : {representante_nome} : {fantasia_cliente}")
     linha = [agora, f"({representante})" + representante_nome, cliente, data_entrega,
              forma_pagamento, '', '', '', ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
              at2, at2_valor, at5, at5_valor, '', ab1, ab1_valor, ab2, ab2_valor, cb1, cb1_valor, cb2, cb2_valor, '',
