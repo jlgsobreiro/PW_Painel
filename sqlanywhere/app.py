@@ -383,21 +383,6 @@ def resumo():
         escritor([representante, cliente, data_entrega, forma_de_pagamento, produtos, observcoes])
 
 
-@app.route('/aplicacaop', methods=["GET", "POST"])
-def aplicacaop():
-    return json.jsonify(Prowater.aplicacaop())
-
-
-@app.route('/aplicacaor', methods=["GET", "POST"])
-def aplicacaor():
-    return json.jsonify(Prowater.aplicacaor())
-
-
-@app.route('/custos', methods=["GET", "POST"])
-def custos():
-    return json.jsonify(Prowater.custos())
-
-
 @app.route('/admin', methods=["GET", "POST"])
 def admin():
     conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
