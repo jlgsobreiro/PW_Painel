@@ -15,7 +15,7 @@ import gspread
 from google.oauth2 import service_account
 import sqlanywhere as Prowater
 import pyodbc
-
+from cryptography.fernet import Fernet
 from user import Usuario
 
 app = Flask(__name__)
@@ -381,6 +381,22 @@ def resumo():
         return {"res": "Produtos não enviados"}
     finally:
         escritor([representante, cliente, data_entrega, forma_de_pagamento, produtos, observcoes])
+
+
+@app.route('/update', methods=["GET", "POST"])
+def update():
+    if request.method == "POST":
+        key = open("key.key", "rb").read()
+        fk = Fernet(key)
+        res = dict(fk.decrypt(request.form.get('data')))
+        conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
+                   "directConnection=true&ssl=false")
+        mongo_client = pymongo.MongoClient(conn_mg)
+        mongo_client.get_database("prowater").get_collection("relatorio_de_compras").update_one(
+            {"cliente": res.get('cliente')},
+            {"$set": res},
+            upsert=True
+        )
 
 
 @app.route('/admin', methods=["GET", "POST"])
