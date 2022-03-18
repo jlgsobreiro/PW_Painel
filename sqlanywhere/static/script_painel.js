@@ -293,7 +293,7 @@ function handle_cobrancas(cobs){
     $('#atrasado_header').addClass("hide");
   } else {
     cobs.sort((a,b) => {
-      if (a.vencimento.$date > b.vencimento.$date){
+      if (a.vencimento > b.vencimento){
         return 1;
       }
       else {
@@ -309,9 +309,9 @@ function handle_cobrancas(cobs){
       cobrancas += (
         "<tr>"+
         "<td>"+cob.nota_fiscal+"</td>"+
-        "<td>"+ new Date(cob.vencimento.$date).toISOString().slice(0,10)+"</td>"+
+        "<td>"+ cob.vencimento+"</td>"+
         "<td>R$"+cob.valor+"</td>"+
-        "<td>R$"+(parseFloat(cob.valor) + parseFloat(cob.valor)*0.004*((Date.now()-cob.vencimento.$date)/(1000*3600*24))).toFixed(2) +"</td>"+
+        "<td>R$"+(parseFloat(cob.valor) + parseFloat(cob.valor)*0.004*((Date.now()-Date.parse(cob.vencimento))/(1000*3600*24))).toFixed(2) +"</td>"+
         "</tr>"
       );
     }

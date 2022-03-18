@@ -173,6 +173,16 @@ def extratorcobranca(tabelacobrancas):
     return lista_de_cobrancas
 
 
+def extratorcobranca_local(tabelacobrancas):
+    lista_de_cobrancas = []
+    for linha in tabelacobrancas:
+        temp = {"representante": linha.REPR, "cliente": linha.CLI, "empresa": linha.EMP, "nota_fiscal": linha.NOTA,
+                "pedido": linha.PED, "vencimento": linha.VCTO.__str__(), "emissao": linha.EMISSAO.__str__(),
+                "parcela": linha.PARC, "valor": float(linha.VALOR)}
+        lista_de_cobrancas.append(temp)
+    return lista_de_cobrancas
+
+
 def cobrancas():
     conn = pyodbc.connect(
         Dsn="PW64", uid="BYTEC", pwd="BYTEC")
@@ -186,13 +196,17 @@ def selecionaCobranca(tabelacobrancas, **kwargs):
     cliente = kwargs.get("cliente")
     empresa = kwargs.get("empresa")
     pedido = kwargs.get("pedido")
+    local = kwargs.get("local")
     nota_fiscal = kwargs.get("nota_fiscal")
     conn = pyodbc.connect(
         Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     if tabelacobrancas is None:
         tabelacobrancas = conn.cursor().execute(
             Query.cobrancasporargumentos(cliente=cliente, empresa=empresa, pedido=pedido, nota_fiscal=nota_fiscal))
-    resultado = extratorcobranca(tabelacobrancas)
+    if local:
+        resultado = extratorcobranca_local(tabelacobrancas)
+    else:
+        resultado = extratorcobranca(tabelacobrancas)
     conn.close()
     return resultado
 
@@ -401,7 +415,7 @@ def historicofaturamento(conn: pyodbc.Cursor, **kwargs):
         else:
             if nota.get("nota") is not None:
                 notas.append(nota)
-            nota = {"nota": item.NOTA, "data": item.PERIODO, "bonificacao": item.NF_NB[:2] == "NB",
+            nota = {"nota": item.NOTA, "data": item.PERIODO.strftime('%Y/%m/%d'), "bonificacao": item.NF_NB[:2],
                     "total_nota": float(item.TOT_NOTA), "produtos": []}
             nota.get("produtos").append(temp)
     notas.append(nota)
@@ -421,7 +435,7 @@ def itemsnotasfaturadas():
         temp = {"representante": item.REPRE, "rota": item.ROTA, "zona": item.ZONA, "mercado": item.MERCADO,
                 "cliente": item.CODIGO, "estado": item.ST, "fantasia": item.FANTASIA, "empresa": item.EMP,
                 "nota": item.NOTA,
-                "pedido": item.PEDIDO, "data_faturamento": item.DT, "produto": item.PRODUTO,
+                "pedido": item.PEDIDO, "data_faturamento": item.DT.strftime('%Y/%m/%d'), "produto": item.PRODUTO,
                 "quantidade": int(item.QTD),
                 "valor_unitario": float(item.UN)}
         item_nota_faturada.append(temp)
@@ -546,6 +560,7 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
 
 
 def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
+    global temp
     conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
     consultas = None
     historico_mem = None
@@ -555,7 +570,7 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
     lista_clientes = []
     for item in consultas:
         clinte = str(item.ENDERECO).split("-")
-        cobs = selecionaCobranca(None, cliente=clinte[0].strip())
+        cobs = selecionaCobranca(None, cliente=clinte[0].strip(), local=True)
         quantidade_historico = quantidadefathistorico(cliente=clinte[0].strip())
         for query in Query.historiconotas(cliente=cli):
             historico_mem = conn.cursor().execute(query)
@@ -564,8 +579,8 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
         temp = {
             "representante": item.REPRE,
             "representante_nome": repre_dados.get("fantasia"),
-            "tmp_ped": item.PED,
-            "tmp_fat": item.FAT,
+            "tmp_ped": item.PED.strftime('%Y/%m/%d') if item.PED is not None else '9999/12/31',
+            "tmp_fat": item.FAT.strftime('%Y/%m/%d') if item.FAT is not None else '9999/12/31',
             "estado": str(item.ST).strip(),
             "cobrancas": cobs,
             "cliente": clinte[0].strip(),
@@ -577,22 +592,25 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
         }
         if len(historico) > 1:
             historico = sorted(historico, key=lambda k: k['data'], reverse=True)
-            filtro = [data for data in historico if data.get('data') >= datetime.now() - timedelta(days=365)]
+            filtro = [data for data in historico if
+                      datetime.strptime(data.get('data'), '%Y/%m/%d') >= datetime.now() - timedelta(days=365)]
             temp['historico'] = filtro[:top]
             if len(filtro) > 1:
                 entre_compras = []
                 for venda in range((len(filtro) - 1)):
                     entre_compras.append(
-                        filtro[venda].get('data') - filtro[venda + 1].get('data'))
+                        datetime.strptime(filtro[venda].get('data'), '%Y/%m/%d') -
+                        datetime.strptime(filtro[venda + 1].get('data'), '%Y/%m/%d'))
                 media_compra = timedelta(days=0)
                 for tempo in entre_compras:
                     media_compra += tempo
                 temp['media_compras'] = int(media_compra.days / len(filtro))
-                temp['ataque'] = temp['tmp_fat'] + (
-                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))
+                temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + (
+                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))).strftime(
+                    '%Y/%m/%d')
             else:
                 temp['media_compras'] = 21
-                temp['ataque'] = temp['tmp_fat'] + timedelta(days=14)
+                temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + timedelta(days=14)).strftime('%Y/%m/%d')
         tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=clinte[0].strip())))
         if tabela_preco:
             lista_produtos = cursor_para_lista_dict(
@@ -600,10 +618,11 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
             for i in range(len(lista_produtos)):
                 lista_produtos[i]["VALOR"] = float(lista_produtos[i].get("VALOR"))
                 lista_produtos[i]["ITEM"] = lista_produtos[i].get("ITEM").strip()
+                lista_produtos[i]["DT_INI"] = lista_produtos[i]["DT_INI"].strftime('%Y/%m/%d')
+                lista_produtos[i]["DT_FIN"] = lista_produtos[i]["DT_FIN"].strftime('%Y/%m/%d')
             temp['tabela'] = lista_produtos
-        lista_clientes.append(temp)
     conn.close()
-    return lista_clientes
+    return temp
 
 
 def relatorio_cliente(**kwargs):

@@ -1,3 +1,4 @@
+import ast
 from datetime import datetime
 
 import flask.json as json
@@ -27,7 +28,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-#spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
+# spreadsheet_id = "1l7KkeMx7rOLYqU1TnXZikuzbQHvN4SJSKiJH3BMQx2c"
 spreadsheet_id = "1ITKWGDsDiqNl7NrRzYRqYlZHu6LzGYJJNmANyQgrZrw"
 sheet_id = "0"
 json_file = "prowater-177d3-e29737f9229f.json"
@@ -385,10 +386,12 @@ def resumo():
 
 @app.route('/update', methods=["GET", "POST"])
 def update():
+    global res
     if request.method == "POST":
         key = open("key.key", "rb").read()
         fk = Fernet(key)
-        res = dict(fk.decrypt(request.form.get('data')))
+        print(fk.decrypt(request.data).decode('utf-8'))
+        res = json.loads(fk.decrypt(request.data).decode('utf-8').replace('\'', '\"'))
         conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
                    "directConnection=true&ssl=false")
         mongo_client = pymongo.MongoClient(conn_mg)
@@ -397,6 +400,7 @@ def update():
             {"$set": res},
             upsert=True
         )
+    return res
 
 
 @app.route('/admin', methods=["GET", "POST"])
