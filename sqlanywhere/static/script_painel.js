@@ -107,8 +107,8 @@ function descontoCaixas (caixas) {
      tot_tabela += qtd*items[i].valor;
      x += qtd * vl_pedido;
    }
-   desconto_ped = parseFloat(x/tot_tabela_cli);
    let desconto_ped_real = parseFloat(x/tot_tabela);
+   desconto_ped = isNaN(parseFloat(x/tot_tabela_cli)) ? desconto_ped_real : parseFloat(x/tot_tabela_cli);
    total_ped = x.toFixed(2);
    desconto_max = parseFloat(descontoCaixas(tot_qtd));
    let desconto_final = isNaN((1-desconto_ped_real)*100) ? 0 : (1-desconto_ped_real)*100;
@@ -200,7 +200,6 @@ function handler_cliente() {
           handle_cobrancas(data.cobrancas);
           handle_historico(data.historico);
           handle_tabela(data.tabela);
-          habilita_resumo();
         } else {
           $.Deferred().reject(data);
         }
@@ -212,6 +211,7 @@ function handler_cliente() {
         M.Modal.getInstance($("#modal_enviando")).close();
         M.toast({html: "Erro ao consultar cliente"});
     });
+    habilita_resumo();
   }
  }
 
