@@ -104,7 +104,7 @@ def escritor(lista):
         {"representante": rep_cod})['representante_nome']
     fantasia_cliente = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find_one(
         {"cliente": cliente_cod})['fantasia']
-    print(f"{rep_cod} : {cliente_cod} : {representante_nome} : {fantasia_cliente}")
+    # print(f"{rep_cod} : {cliente_cod} : {representante_nome} : {fantasia_cliente}")
     linha = [agora, f"({representante})" + representante_nome, cliente, data_entrega,
              forma_pagamento, '', '', '', ct1, cti_valor, ct2, ct2_valor, ct5, ct5_valor, at1, at1_valor,
              at2, at2_valor, at5, at5_valor, '', ab1, ab1_valor, ab2, ab2_valor, cb1, cb1_valor, cb2, cb2_valor, '',
@@ -155,10 +155,13 @@ def perfil():
     mongo_client = pymongo.MongoClient(conn)
     clientes = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find(
         {"supervisores": current_user.info.get('AEMPR_CODIGO')})
-    print(clientes.count())
+    # print(clientes.count())
     lista_clientes = list(clientes)
-    lista_clientes = [r for r in lista_clientes if r.get('ataque') <= datetime.now()]
+    lista_clientes_sem_ataque = [r for r in lista_clientes if r.get('ataque') is None]
+    lista_clientes = [r for r in lista_clientes if r.get('ataque') is not None]
+    lista_clientes = [r for r in lista_clientes if datetime.strptime(r.get('ataque'), '%Y/%m/%d') <= datetime.now()]
     lista_clientes = sorted(lista_clientes, key=lambda k: k['ataque'], reverse=True)
+    lista_clientes += lista_clientes_sem_ataque
     return render_template("perfil.html", nome=nome, qtd_pedidos=qtd_pedidos, vlr_pedidos=vlr_pedidos,
                            qtd_clientes=qtd_clientes, clientes=lista_clientes)
 
@@ -278,29 +281,7 @@ def painel():
             Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
         return lista_tabela_preco
 
-    try:
-        tabela = tabelaprecos()
-    except:
-        tabela = [
-            {"codigo": '011009', "valor": 43.08},
-            {"codigo": '011001', "valor": 47.60},
-            {"codigo": '011005', "valor": 55.80},
-            {"codigo": '012010', "valor": 45.60},
-            {"codigo": '012003', "valor": 53.60},
-            {"codigo": '021002', "valor": 33.00},
-            {"codigo": '021006', "valor": 38.32},
-            {"codigo": '021007', "valor": 43.88},
-            {"codigo": '022004', "valor": 38.16},
-            {"codigo": '022008', "valor": 39.92},
-            {"codigo": '031011', "valor": 51.00},
-            {"codigo": '031014', "valor": 98.40},
-            {"codigo": '031013', "valor": 373.90},
-            {"codigo": '041017', "valor": 28.20},
-            {"codigo": '042020', "valor": 28.20},
-            {"codigo": '043018', "valor": 28.20},
-            {"codigo": '051021', "valor": 79.20},
-            {"codigo": '051022', "valor": 83.70}
-        ]
+    tabela = tabelaprecos()
     return render_template("painel.html", title="Painel", produtos=[
         {"id": 1, "descricao": "CT-1", "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
          "codigo": '011009'},
@@ -386,20 +367,25 @@ def resumo():
 
 @app.route('/update', methods=["GET", "POST"])
 def update():
-    global res
+    global res, update_info
     if request.method == "POST":
         key = open("key.key", "rb").read()
         fk = Fernet(key)
-        print(fk.decrypt(request.data).decode('utf-8'))
+        # print(fk.decrypt(request.data).decode('utf-8'))
         res = json.loads(fk.decrypt(request.data).decode('utf-8').replace('\'', '\"'))
         conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
                    "directConnection=true&ssl=false")
         mongo_client = pymongo.MongoClient(conn_mg)
-        mongo_client.get_database("prowater").get_collection("relatorio_de_compras").update_one(
-            {"cliente": res.get('cliente')},
-            {"$set": res},
-            upsert=True
-        )
+        collection = res.get('collection')
+        if collection == 'relatorio_de_compras':
+            mongo_client.get_database("prowater").get_collection(collection).update_one(
+                {"cliente": res.get('data').get('cliente')}, {"$set": res.get('data')}, upsert=True)
+        elif collection == 'representantes':
+            for repre in res.get('data'):
+                mongo_client.get_database("prowater").get_collection(collection).update_one(
+                    {"AEMPR_CODIGO": repre.get('AEMPR_CODIGO')},
+                    {"$set": repre},
+                    upsert=True)
     return res
 
 

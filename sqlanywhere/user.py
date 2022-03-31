@@ -1,42 +1,16 @@
-import pyodbc
+import pymongo
 
 import sqlanywhere as SQL
 
 
 class Usuario:
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+
     def __init__(self, cnpj_cpf, codigo):
         self.qtd_clientes = None
         self.vlr_pedidos = None
         self.qtd_pedidos = None
-        self.info = SQL.representante_info(cnpj_cpf=cnpj_cpf, codigo=codigo)
-        if self.info:
-            self.qtdclientes()
-            self.vlrpedidos()
-            self.qtdpedidos()
-
-    def qtdpedidos(self):
-        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-        qtd_pedidos = conn.execute(
-            f"select count(*) as res from VNDANFCD where ANFCD_REPRE = {self.info.get('AEMPR_CODIGO')}")
-        res = SQL.cursor_para_lista_dict(qtd_pedidos)
-        self.qtd_pedidos = res[0].get('res')
-        conn.close()
-
-    def vlrpedidos(self):
-        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-        vlr_pedidos = conn.execute(
-            f"select sum(ANFCD_TOT_NOTA) as res from VNDANFCD where ANFCD_REPRE = {self.info.get('AEMPR_CODIGO')}")
-        res = SQL.cursor_para_lista_dict(vlr_pedidos)
-        self.vlr_pedidos = res[0].get('res')
-        conn.close()
-
-    def qtdclientes(self):
-        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-        query = f"select count(*) as res from SUPAEMPR where AEMPR_REPR = '{self.info.get('AEMPR_CODIGO')}' AND AEMPR_TIPO = 'C' AND AEMPR_STATUS = 'A'"
-        qtd_clientes = conn.execute(query)
-        res = SQL.cursor_para_lista_dict(qtd_clientes)
-        self.qtd_clientes = res[0].get('res')
-        conn.close()
+        self.info = self.get_info(cnpj_cpf=cnpj_cpf, codigo=codigo)
 
     def is_authenticated(self):
         if self.is_active() and self.is_active():
@@ -50,7 +24,8 @@ class Usuario:
         else:
             return False
 
-    def is_anonymous(self):
+    @staticmethod
+    def is_anonymous():
         return False
 
     def get_id(self):
@@ -62,3 +37,29 @@ class Usuario:
                 cpf_cnpj = self.info.get('AEMPR_CGC')
                 return cpf_cnpj
         return None
+
+    def get_info(self, cnpj_cpf, codigo):
+        mongo_client = pymongo.MongoClient(self.conn)
+        if codigo is None:
+            if len(cnpj_cpf) == 11:
+                repre = mongo_client.get_database('prowater').get_collection('representantes').find_one(
+                    {'AEMPR_CPF': cnpj_cpf})
+            else:
+                repre = mongo_client.get_database('prowater').get_collection('representantes').find_one(
+                    {'AEMPR_CGC': cnpj_cpf})
+            return repre
+        repre = mongo_client.get_database('prowater').get_collection('representantes').find_one(
+            {'AEMPR_CODIGO': codigo})
+        if repre.get('AEMPR_CGC_CPF') == 'F':
+            if repre.get('AEMPR_CPF') == cnpj_cpf:
+                return repre
+        else:
+            if repre.get('AEMPR_CGC') == cnpj_cpf:
+                return repre
+        return None
+
+    def get_clientes(self):
+        mongo_client = pymongo.MongoClient(self.conn)
+        res = mongo_client.get_database('prowater').get_collection('relatorio_de_compras').find(
+            {'supervisores': self.info.get('AEMPR_CODIGO')})
+        return res.__dict__()

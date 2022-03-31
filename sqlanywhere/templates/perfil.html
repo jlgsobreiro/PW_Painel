@@ -19,12 +19,14 @@
     <p>QTD CLientes: {{ qtd_clientes }}</p>
     {% for cliente in clientes %}
         <div style="background-color: lightgray">
-            <p>{{ cliente['fantasia'] }}</p>
-            <p>{{ cliente['cliente'] }}</p>
-            <p>{{ cliente['endereco'] }}</p>
-            <p>{{ cliente['cnpj_cpf'] }}</p>
-            <p>{{ cliente['representante'] }}</p>
-            <p>{{ cliente['ataque'] }}</p>
+            <p>Cliente: {{ cliente['fantasia'] }}</p>
+            <p>Código: {{ cliente['cliente'] }}</p>
+            <p>Endereço: {{ cliente['endereco'] }}</p>
+            <p>CNPJ/CPF: {{ cliente['cnpj_cpf'] }}</p>
+            <p>Representante: {{ cliente['representante'] }} - {{ cliente['representante_nome'] }}</p>
+            <p>Data Ataque: {{ cliente['ataque'] }}</p>
+            <p>Data Ult Fat: {{ cliente['tmp_fat'] }}</p>
+            <p>Data Ult Ped: {{ cliente['tmp_ped'] }}</p>
         </div>
     {% endfor %}
 {% endblock %}

@@ -520,6 +520,8 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
             "qtd_historico": quantidade_historico,
             "cnpj_cpf": item.CNPJ_CPF
         }
+        temp['media_compras'] = 21
+        temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + timedelta(days=14)).strptime('%Y/%m/%d')
         if len(historico) > 1:
             historico = sorted(historico, key=lambda k: k['data'], reverse=True)
             filtro = [data for data in historico if data.get('data') >= datetime.now() - timedelta(days=365)]
@@ -533,11 +535,8 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
                 for tempo in entre_compras:
                     media_compra += tempo
                 temp['media_compras'] = int(media_compra.days / len(filtro))
-                temp['ataque'] = temp['tmp_fat'] + (
-                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))
-            else:
-                temp['media_compras'] = 21
-                temp['ataque'] = temp['tmp_fat'] + timedelta(days=14)
+                temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + (
+                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))).strftime('%Y/%m/%d')
         tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=clinte[0].strip())))
         if tabela_preco:
             lista_produtos = cursor_para_lista_dict(
@@ -590,6 +589,9 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
             "qtd_historico": quantidade_historico,
             "cnpj_cpf": item.CNPJ_CPF
         }
+        temp['media_compras'] = 21
+        tmp_fat = temp['tmp_fat'] if temp['tmp_fat'] != '9999/12/31' else (datetime.now()-timedelta(days=14)).strftime('%Y/%m/%d')
+        temp['ataque'] = (datetime.strptime(tmp_fat, '%Y/%m/%d') + timedelta(days=14)).strftime('%Y/%m/%d')
         if len(historico) > 1:
             historico = sorted(historico, key=lambda k: k['data'], reverse=True)
             filtro = [data for data in historico if
@@ -608,9 +610,6 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
                 temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + (
                         (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))).strftime(
                     '%Y/%m/%d')
-            else:
-                temp['media_compras'] = 21
-                temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + timedelta(days=14)).strftime('%Y/%m/%d')
         tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=clinte[0].strip())))
         if tabela_preco:
             lista_produtos = cursor_para_lista_dict(
@@ -682,10 +681,13 @@ def representante_info(**kwargs):
     query = f"SELECT * FROM SUPAEMPR WHERE AEMPR_TIPO = 'R' {codigo} {cnpj_cpf}"
     consulta = conn.cursor().execute(query)
     teste = cursor_para_lista_dict(consulta)
-
+    id_l = 0
+    for x in teste:
+        teste[id_l] = {k: str(v) for k, v in x.items()}
+        id_l += 1
     conn.close()
     if teste:
-        return teste[0]
+        return teste
     else:
         return None
 

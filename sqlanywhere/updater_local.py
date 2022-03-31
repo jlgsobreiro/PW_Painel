@@ -12,10 +12,15 @@ key = open("key.key", "rb").read()
 fk = Fernet(key)
 clientes = conn.cursor().execute(
     "select AEMPR_CODIGO as COD,AEMPR_REPR as REPRE, if(AEMPR_CGC_CPF = 'F') then AEMPR_CPF ELSE AEMPR_CGC ENDIF as CNPJ_CPF from SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_STATUS = 'A' ORDER BY AEMPR_DT_CADASTRO DESC ")
+repres = sql.representante_info()
+requests.post("http://127.0.0.1:5000/update",
+              data=fk.encrypt({'data': repres, 'collection': 'representantes'}.__str__().encode()))
 for cliente in clientes:
     data = sql.relatorio_de_compras_local(repre=cliente.REPRE, cli=cliente.COD, cnpj_cpf=cliente.CNPJ_CPF, top=6)
-    res = requests.post("http://127.0.0.1:5000/update", data=fk.encrypt(data.__str__().encode()))
+    res = requests.post("http://127.0.0.1:5000/update",
+                        data=fk.encrypt({'data': data, 'collection': 'relatorio_de_compras'}.__str__().encode()))
     print(res.content)
+
 conn.close()
 file.write(f"Fechando: {datetime.datetime.now().ctime()}\n")
 file.close()
