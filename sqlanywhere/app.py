@@ -386,6 +386,12 @@ def update():
                     {"AEMPR_CODIGO": repre.get('AEMPR_CODIGO')},
                     {"$set": repre},
                     upsert=True)
+        elif collection == 'tabela_precos':
+            produto = res.get('data')
+            mongo_client.get_database("prowater").get_collection(collection).update_one(
+                {"codigo": produto.get('codigo')},
+                {"$set": produto},
+                upsert=True)
     return res
 
 

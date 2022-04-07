@@ -536,7 +536,8 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
                     media_compra += tempo
                 temp['media_compras'] = int(media_compra.days / len(filtro))
                 temp['ataque'] = (datetime.strptime(temp['tmp_fat'], '%Y/%m/%d') + (
-                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))).strftime('%Y/%m/%d')
+                        (timedelta(days=int(media_compra.days / (len(filtro))))) - timedelta(days=7))).strftime(
+                    '%Y/%m/%d')
         tabela_preco = cursor_para_lista_dict(conn.cursor().execute(Query.tabelacliente(cli=clinte[0].strip())))
         if tabela_preco:
             lista_produtos = cursor_para_lista_dict(
@@ -590,7 +591,8 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
             "cnpj_cpf": item.CNPJ_CPF
         }
         temp['media_compras'] = 21
-        tmp_fat = temp['tmp_fat'] if temp['tmp_fat'] != '9999/12/31' else (datetime.now()-timedelta(days=14)).strftime('%Y/%m/%d')
+        tmp_fat = temp['tmp_fat'] if temp['tmp_fat'] != '9999/12/31' else (
+                    datetime.now() - timedelta(days=14)).strftime('%Y/%m/%d')
         temp['ataque'] = (datetime.strptime(tmp_fat, '%Y/%m/%d') + timedelta(days=14)).strftime('%Y/%m/%d')
         if len(historico) > 1:
             historico = sorted(historico, key=lambda k: k['data'], reverse=True)
@@ -700,6 +702,14 @@ def atualiza_tabela4(conn, mongo_client):
         mongo_client.get_database("prowater").get_collection("tabela_precos").update_one({"codigo": temp.get('codigo')},
                                                                                          {"$set": temp}, upsert=True)
     conn.close()
+
+
+def atualiza_tabela4_local():
+    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    tabela_preco = conn.cursor().execute(Query.tabela4())
+    catalogo = [{"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),"tabela": item.TABELA} for item in tabela_preco]
+    conn.close()
+    return catalogo
 
 
 class Exportar:
