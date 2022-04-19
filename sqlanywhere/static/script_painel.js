@@ -33,7 +33,7 @@ $(document).ready(function(){
       $("#cliente_label").addClass("active");
     })
   });
-});
+})
 let items;
 let total_ped;
 let desconto_ped;
@@ -438,3 +438,6 @@ function forma_de_pagamento(){
     $("#pag0").prop( "checked", true );
   }
 }
+$( window ).on( "load", function() {
+  handler_cliente();
+});

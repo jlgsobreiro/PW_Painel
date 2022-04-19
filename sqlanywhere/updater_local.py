@@ -18,7 +18,9 @@ for item in catalogo:
                         data=fk.encrypt({'data': item, 'collection': 'tabela_precos'}.__str__().encode()))
     print(res.content)
 clientes = conn.cursor().execute(
-    "select AEMPR_CODIGO as COD,AEMPR_REPR as REPRE, if(AEMPR_CGC_CPF = 'F') then AEMPR_CPF ELSE AEMPR_CGC ENDIF as CNPJ_CPF from SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_STATUS = 'A' ORDER BY AEMPR_DT_CADASTRO DESC ")
+    ("select AEMPR_CODIGO as COD,"
+     "AEMPR_REPR as REPRE, if(AEMPR_CGC_CPF = 'F') then AEMPR_CPF ELSE AEMPR_CGC ENDIF as CNPJ_CPF "
+     "from SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_STATUS = 'A' ORDER BY AEMPR_DT_CADASTRO DESC "))
 repres = sql.representante_info()
 res = requests.post(f"{url_servidor}/update",
               data=fk.encrypt({'data': repres, 'collection': 'representantes'}.__str__().encode()))

@@ -17,18 +17,39 @@
     <p>QTD Pedidos: {{ qtd_pedidos }}</p>
     <p>VLR Pedidos: {{ vlr_pedidos }}</p>
     <p>QTD CLientes: {{ qtd_clientes }}</p>
+    <ul id="lista" class="collapsible popout">
     {% for cliente in clientes %}
-        <div style="background-color: lightgray">
-            <p>Cliente: {{ cliente['fantasia'] }}</p>
-            <p>Código: {{ cliente['cliente'] }}</p>
-            <p>Endereço: {{ cliente['endereco'] }}</p>
-            <p>CNPJ/CPF: {{ cliente['cnpj_cpf'] }}</p>
-            <p>Representante: {{ cliente['representante'] }} - {{ cliente['representante_nome'] }}</p>
-            <p>Data Ataque: {{ cliente['ataque'] }}</p>
-            <p>Data Ult Fat: {{ cliente['tmp_fat'] }}</p>
-            <p>Data Ult Ped: {{ cliente['tmp_ped'] }}</p>
-        </div>
+        <li>
+            <div class="collapsible-header row">
+                <div class="col">
+                    <p>Cliente: {{ cliente['fantasia'] }}</p>
+                    <p>Data Ataque: {{ cliente['ataque'] }}</p>
+                </div>
+            </div>
+            <div class="collapsible-body row">
+                <div class="col">
+                    <p>Código: {{ cliente['cliente'] }}</p>
+                    <p>Endereço: {{ cliente['endereco'] }}</p>
+                    <p>CNPJ/CPF: {{ cliente['cnpj_cpf'] }}</p>
+                    <p>Representante: {{ cliente['representante'] }} - {{ cliente['representante_nome'] }}</p>
+                    <p>Data Ult Fat: {{ cliente['tmp_fat'] }}</p>
+                    <p>Data Ult Ped: {{ cliente['tmp_ped'] }}</p>
+                </div>
+                <div class="col">
+                    <form method="post">
+                        <button class="btn waves-effect waves-light" type="submit" name="pedido" style="height: 100%" value="{{ cliente['cliente'] }}">
+                        Tirar pedido
+                        <i class="material-icons right">send</i>
+                    </button>
+                    </form>
+                </div>
+            </div>
+        </li>
     {% endfor %}
+    </ul>
 {% endblock %}
 {% block body %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="../static/script_perfil.js"></script>
 {% endblock %}
