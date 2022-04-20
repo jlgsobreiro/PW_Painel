@@ -2,7 +2,7 @@
 /*globals $:false */
 $(document).ready(function(){
   "use strict";
-  let lista = $('#lista');
+  let lista = $('.lista');
   M.Collapsible.init(lista);
 });
 

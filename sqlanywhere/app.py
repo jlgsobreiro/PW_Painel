@@ -159,15 +159,16 @@ def perfil():
     mongo_client = pymongo.MongoClient(conn)
     clientes = mongo_client.get_database("prowater").get_collection("relatorio_de_compras").find(
         {"supervisores": current_user.info.get('AEMPR_CODIGO')})
-    # print(clientes.count())
     lista_clientes = list(clientes)
     lista_clientes_sem_ataque = [r for r in lista_clientes if r.get('ataque') is None]
     lista_clientes = [r for r in lista_clientes if r.get('ataque') is not None]
+    lista_clientes_atendidos = [r for r in lista_clientes if datetime.strptime(r.get('ataque'), '%Y/%m/%d') >= datetime.now()]
+    lista_clientes_atendidos = sorted(lista_clientes_atendidos, key=lambda k: k['ataque'])
     lista_clientes = [r for r in lista_clientes if datetime.strptime(r.get('ataque'), '%Y/%m/%d') <= datetime.now()]
     lista_clientes = sorted(lista_clientes, key=lambda k: k['ataque'], reverse=True)
     lista_clientes += lista_clientes_sem_ataque
     return render_template("perfil.html", nome=nome, qtd_pedidos=qtd_pedidos, vlr_pedidos=vlr_pedidos,
-                           qtd_clientes=qtd_clientes, clientes=lista_clientes)
+                           qtd_clientes=qtd_clientes, clientes=lista_clientes, atendidos=lista_clientes_atendidos)
 
 
 @app.route('/cliente', methods=["GET", "POST"])
