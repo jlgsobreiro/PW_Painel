@@ -156,7 +156,7 @@ function handler_cliente() {
   let cli_nome = $("#cliente_nome");
   let repre_nome = $("#representante_nome");
   var instance = M.Autocomplete.getInstance(cli_nome);
-  if (ultimo_cliete === cli.val() && cli.val() !== undefined){
+  if (ultimo_cliete === cli.val() && cli.val() !== ''){
     stopper_clientes += 1;
     stopper_historico += 1;
   } else {
