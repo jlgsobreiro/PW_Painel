@@ -156,7 +156,7 @@ function handler_cliente() {
   let cli_nome = $("#cliente_nome");
   let repre_nome = $("#representante_nome");
   var instance = M.Autocomplete.getInstance(cli_nome);
-  if (ultimo_cliete === cli.val()){
+  if (ultimo_cliete === cli.val() && cli.val() !== undefined){
     stopper_clientes += 1;
     stopper_historico += 1;
   } else {
@@ -173,10 +173,12 @@ function handler_cliente() {
         lista_auto[chave] = data[i].cliente;
       }
       instance.updateData(lista);
+    }).done(function (){
+      stopper_clientes = 0;
+      cli.prop("disabled",false);
+      cli_nome.prop("disabled",false);
+      cnpj_cpf.prop("disabled",false);
     });
-    cli.prop("disabled",false);
-    cli_nome.prop("disabled",false);
-    cnpj_cpf.prop("disabled",false);
   }
   if (repre !== '' && (cli.val() !== '' || cnpj_cpf.val() !== '') && stopper_clientes < 2) {
     $("#texto_enviando").text("Carregando Informações do cliente");
