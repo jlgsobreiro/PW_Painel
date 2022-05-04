@@ -10,8 +10,8 @@ file.write(f"Abrindo: {datetime.datetime.now().ctime()}\n")
 conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
 key = open("key.key", "rb").read()
 fk = Fernet(key)
-#url_servidor = 'http://appprowater.ddns.net:5000'
-url_servidor = 'http://127.0.0.1:5000'
+url_servidor = 'http://appprowater.ddns.net:5000'
+#url_servidor = 'http://127.0.0.1:5000'
 catalogo = sql.atualiza_tabela4_local()
 for item in catalogo:
     res = requests.post(f"{url_servidor}/update",

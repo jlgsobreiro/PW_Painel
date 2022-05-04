@@ -1,5 +1,5 @@
 import ast
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import flask.json as json
 import pymongo
@@ -165,10 +165,16 @@ def perfil():
     lista_clientes_atendidos = [r for r in lista_clientes if datetime.strptime(r.get('ataque'), '%Y/%m/%d') >= datetime.now()]
     lista_clientes_atendidos = sorted(lista_clientes_atendidos, key=lambda k: k['ataque'])
     lista_clientes = [r for r in lista_clientes if datetime.strptime(r.get('ataque'), '%Y/%m/%d') <= datetime.now()]
+    desabastecidos = [r for r in lista_clientes if
+                      datetime.strptime(r.get('ataque'), '%Y/%m/%d')+timedelta(days=7) >= datetime.now()]
+    desabastecidos = sorted(desabastecidos, key=lambda k: k['ataque'])
+    lista_clientes= [r for r in lista_clientes if
+                      datetime.strptime(r.get('ataque'), '%Y/%m/%d') + timedelta(days=7) <= datetime.now()]
     lista_clientes = sorted(lista_clientes, key=lambda k: k['ataque'], reverse=True)
     lista_clientes += lista_clientes_sem_ataque
     return render_template("perfil.html", nome=nome, qtd_pedidos=qtd_pedidos, vlr_pedidos=vlr_pedidos,
-                           qtd_clientes=qtd_clientes, clientes=lista_clientes, atendidos=lista_clientes_atendidos)
+                           qtd_clientes=qtd_clientes, clientes=lista_clientes, atendidos=lista_clientes_atendidos,
+                           desabastecidos=desabastecidos)
 
 
 @app.route('/cliente', methods=["GET", "POST"])
