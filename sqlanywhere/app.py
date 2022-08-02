@@ -187,6 +187,12 @@ def cliente():
 def clientes():
     representante = request.form.get("representante")
     representante = '0' * (5 - len(representante)) + representante
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    repr = mongo_client.get_database("prowater") \
+        .get_collection("representantes") \
+        .find({"AEMPR_CODIGO": representante}, {"AEMPR_REPR": 1, "_id": 0}).__getitem__(0).get('AEMPR_REPR')
+    representante = representante if repr != '00001' else repr
     return json.jsonify(Prowater.clientes_repre(repre=representante))
 
 
@@ -275,6 +281,12 @@ def historico_cliente():
     cnpj_cpf = request.form['cnpj_cpf']
     cliente = '0' * (5 - len(cliente)) + cliente
     representante = '0' * (5 - len(representante)) + representante
+    conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
+    mongo_client = pymongo.MongoClient(conn)
+    repr = mongo_client.get_database("prowater") \
+        .get_collection("representantes") \
+        .find({"AEMPR_CODIGO": representante}, {"AEMPR_REPR": 1, "_id": 0}).__getitem__(0).get('AEMPR_REPR')
+    representante = representante if repr != '00001' else repr
     res = Prowater.relatorio_cliente(cli=cliente, repre=representante, cnpj_cpf=cnpj_cpf, top=6)
     return json.jsonify(res)
 
