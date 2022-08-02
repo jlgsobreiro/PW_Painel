@@ -85,6 +85,7 @@ def extratorcliente(listaclientes: list):
 
 def clientes_repre(**kwargs):
     repre = kwargs.get("repre")
+    repre = repre if len(supervisores(repre)) > 2 else supervisores(repre)
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
     item_bd = mongo_client.get_database("prowater") \

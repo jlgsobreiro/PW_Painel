@@ -420,9 +420,9 @@ def update():
 def admin():
     conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
                "directConnection=true&ssl=false")
-    mongo_client = pymongo.MongoClient(conn_mg)
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
-    Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
+    #mongo_client = pymongo.MongoClient(conn_mg)
+    #conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    #Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
     return render_template("admin.html", tittle="Admin")
 
 
