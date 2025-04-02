@@ -48,8 +48,7 @@ class Usuario:
                 repre = mongo_client.get_database('prowater').get_collection('representantes').find_one(
                     {'AEMPR_CGC': cnpj_cpf})
             return repre
-        repre = mongo_client.get_database('prowater').get_collection('representantes').find_one(
-            {'AEMPR_CODIGO': codigo})
+        repre = mongo_client.get_database('prowater').get_collection('representantes').find_one({'AEMPR_CODIGO': codigo})
         if repre.get('AEMPR_CGC_CPF') == 'F':
             if repre.get('AEMPR_CPF') == cnpj_cpf:
                 return repre

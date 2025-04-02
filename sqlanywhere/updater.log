@@ -1,0 +1,60 @@
+Abrindo: Thu Mar 27 19:56:19 2025
+Abrindo: Thu Mar 27 19:56:59 2025
+Abrindo: Thu Mar 27 20:03:03 2025
+Abrindo: Thu Mar 27 20:04:58 2025
+Abrindo: Thu Mar 27 20:37:31 2025
+Abrindo: Thu Mar 27 20:38:08 2025
+Abrindo: Thu Mar 27 20:42:25 2025
+Abrindo: Thu Mar 27 20:43:23 2025
+Abrindo: Thu Mar 27 20:43:32 2025
+Abrindo: Thu Mar 27 20:43:53 2025
+Abrindo: Thu Mar 27 20:45:03 2025
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 4 de 5.
+Falha ao conectar ao banco de dados após 5 tentativas: module aiohttp has no attribute connect
+Erro: module aiohttp has no attribute connect. Retentativa 1 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 4 de 5.
+Abrindo: Thu Mar 27 20:45:46 2025
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: module aiohttp has no attribute connect. Tentativa 3 de 5.
+Abrindo: Thu Mar 27 20:46:02 2025
+Abrindo: Thu Mar 27 20:46:27 2025
+Abrindo: Thu Mar 27 20:46:59 2025
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 1 de 5.
+Abrindo: Thu Mar 27 20:47:35 2025
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 4 de 5.
+Falha ao conectar ao banco de dados após 5 tentativas: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)')
+Erro: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Retentativa 1 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 4 de 5.
+Falha ao conectar ao banco de dados após 5 tentativas: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)')
+Erro: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Retentativa 2 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 4 de 5.
+Falha ao conectar ao banco de dados após 5 tentativas: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)')
+Erro: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Retentativa 3 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 4 de 5.
+Falha ao conectar ao banco de dados após 5 tentativas: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)')
+Erro: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Retentativa 4 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 1 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 2 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 3 de 5.
+Erro ao conectar ao banco de dados: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)'). Tentativa 4 de 5.
+Falha ao conectar ao banco de dados após 5 tentativas: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)')
+Falha após 5 tentativas: ('08001', '[08001] [Sybase][ODBC Driver][SQL Anywhere]Database server not found (-100) (SQLDriverConnect)')

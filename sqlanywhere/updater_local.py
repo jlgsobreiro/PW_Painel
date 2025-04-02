@@ -10,7 +10,7 @@ import sqlanywhere as sql
 
 url_servidor = 'http://appprowater.ddns.net:5000'
 #url_servidor = 'http://127.0.0.1:5000'
-conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
 key = open("key.key", "rb").read()
 fk = Fernet(key)
 
