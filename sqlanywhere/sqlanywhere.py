@@ -13,7 +13,7 @@ import pymongo
 
 
 def getEmails(codigo: any, tipo: str):
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     emails = conn.cursor().execute(Query.emailporcodigo(codigo, tipo))
     lista_emails = []
     for enderecos in emails:
@@ -27,7 +27,7 @@ def getEmails(codigo: any, tipo: str):
 
 
 def clientefantasia(codigo):
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     tabela = conn.cursor().execute(
         f"SELECT AEMPR_NOME_ABREV as FANT FROM SUPAEMPR where AEMPR_TIPO = 'C' AND AEMPR_CODIGO = {codigo}")
     fantasia = ''
@@ -102,7 +102,7 @@ def clientes(**kwargs):
     lista_clientes = None
     if clientes is None:
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         for query in Query.clientes():
             lista_clientes = conn.cursor().execute(query)
         resultado = extratorcliente(lista_clientes)
@@ -110,7 +110,7 @@ def clientes(**kwargs):
         return resultado
     elif isinstance(clientes, str):
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         for query in Query.clienteporcodigo(clientes):
             lista_clientes = conn.cursor().execute(query)
         resultado = extratorcliente([lista_clientes])
@@ -118,7 +118,7 @@ def clientes(**kwargs):
         return resultado
     elif isinstance(clientes, list):
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         lista_clientes = []
         for query in Query.clienteporcodigo(0)[0:18]:
             conn.cursor().execute(query)
@@ -133,7 +133,7 @@ def clientes(**kwargs):
 
 
 def tabelaprecos():
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     tabela_preco = conn.cursor().execute(Query.tabela4())
     lista_tabela_preco = []
     for item in tabela_preco:
@@ -146,7 +146,7 @@ def tabelaprecos():
 
 def tabelaprecosfinal():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     tabela_preco = conn.cursor().execute(Query.tabelaprecosfinal())
     lista_tabela_preco_final = []
     for item in tabela_preco:
@@ -185,7 +185,7 @@ def extratorcobranca_local(tabelacobrancas):
 
 def cobrancas():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     tabelacobrancas = conn.cursor().execute(Query.cobrancas())
     resultado = extratorcobranca(tabelacobrancas)
     conn.close()
@@ -199,7 +199,7 @@ def selecionaCobranca(tabelacobrancas, **kwargs):
     local = kwargs.get("local")
     nota_fiscal = kwargs.get("nota_fiscal")
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     if tabelacobrancas is None:
         tabelacobrancas = conn.cursor().execute(
             Query.cobrancasporargumentos(cliente=cliente, empresa=empresa, pedido=pedido, nota_fiscal=nota_fiscal))
@@ -214,7 +214,7 @@ def selecionaCobranca(tabelacobrancas, **kwargs):
 def representantes(**kwargs):
     repre = kwargs.get("repre") if kwargs.get("repre") is None else ""
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     representantes = conn.cursor().execute(Query.representantes(repre))
     lista_de_representantes = []
     for item in representantes:
@@ -227,7 +227,7 @@ def representantes(**kwargs):
 
 def representante(codigo):
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     repre = conn.cursor().execute(Query.representante(codigo))
     for item in repre:
         temp = {"codigo": item.COD, "razao_social": item.RAZAO, "fantasia": item.FANT,
@@ -238,7 +238,7 @@ def representante(codigo):
 
 def entregadivida():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.entregadivida():
         consultas = conn.cursor().execute(query)
@@ -256,7 +256,7 @@ def entregadivida():
 
 def notascanceladasemotivo():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.notascanceladasemotivo():
         consultas = conn.cursor().execute(query)
@@ -273,7 +273,7 @@ def notascanceladasemotivo():
 
 def emissaodenotasfiscais():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.emissaonotasfiscais():
         consultas = conn.cursor().execute(query)
@@ -296,7 +296,7 @@ def emissaodenotasfiscais():
 
 def producao():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = conn.cursor().execute(Query.producao())
     lista_producao = []
     for item in consultas:
@@ -310,7 +310,7 @@ def producao():
 
 def relatoriodecompras():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.relatoriodecompas():
         consultas = conn.cursor().execute(query)
@@ -332,7 +332,7 @@ def relatoriodecompras():
 
 def itenspedidos():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.itenspedidos():
         consultas = conn.cursor().execute(query)
@@ -350,7 +350,7 @@ def itenspedidos():
 
 def pedidosabertos():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.pedidosabertos():
         consultas = conn.cursor().execute(query)
@@ -374,7 +374,7 @@ def pedidosabertos():
 def quantidadefathistorico(**kwargs):
     cliente = kwargs.get("cliente")
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = conn.cursor().execute(Query.contaconotas(cliente=cliente))
     res = None
     for item in consultas:
@@ -392,7 +392,7 @@ def historicofaturamento(conn: pyodbc.Cursor, **kwargs):
     if conn is None:
         fecha_conn = True
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         for query in Query.historiconotas(cliente=cliente, nota=notaf, top=top):
             consultas = conn.cursor().execute(query)
     else:
@@ -426,7 +426,7 @@ def historicofaturamento(conn: pyodbc.Cursor, **kwargs):
 
 def itemsnotasfaturadas():
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.itensnotasfaturadas():
         consultas = conn.cursor().execute(query)
@@ -445,7 +445,7 @@ def itemsnotasfaturadas():
 
 def notasepedidos(cliente):
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     for query in Query.notasepedidos(cliente=cliente):
         consultas = conn.cursor().execute(query)
@@ -456,7 +456,7 @@ def notasepedidos(cliente):
 
 def supervisores(repre):
     conn = pyodbc.connect(
-        Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     superv = [repre]
     consultas = conn.cursor().execute(Query.supervisores(repre=repre))
     for item in consultas:
@@ -470,7 +470,7 @@ def supervisores(repre):
 def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     historico_mem = None
     for query in Query.relatoriodecomprasleve(repre=repre, cliente=cli, cnpj_cpf=cnpj_cpf):
@@ -561,7 +561,7 @@ def relatorio_de_compras(repre, cli, cnpj_cpf, top, forcar):
 
 def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
     global temp
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     consultas = None
     historico_mem = None
     for query in Query.relatoriodecomprasleve(repre=repre, cliente=cli, cnpj_cpf=cnpj_cpf):
@@ -650,7 +650,7 @@ def relatorio_cliente(**kwargs):
 
 
 def aplicacaop():
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     res = conn.cursor().execute(Query.aplicacaop())
     cursor_res = cursor_para_lista_dict(res)
     conn.close()
@@ -658,7 +658,7 @@ def aplicacaop():
 
 
 def aplicacaor():
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     res = conn.cursor().execute(Query.aplicacaor())
     cursor_res = cursor_para_lista_dict(res)
     conn.close()
@@ -666,7 +666,7 @@ def aplicacaor():
 
 
 def custos():
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     res = None
     for linha in Query.custos():
         res = conn.cursor().execute(linha)
@@ -679,7 +679,7 @@ def representante_info(**kwargs):
     codigo = f" AND AEMPR_CODIGO = {kwargs.get('codigo')} " if kwargs.get('codigo') is not None else ''
     cnpj_cpf = f" AND (if AEMPR_CGC_CPF = 'F' then AEMPR_CPF else AEMPR_CGC ENDIF) = {kwargs.get('cnpj_cpf')}" if kwargs.get(
         'cnpj_cpf') else ''
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     query = f"SELECT * FROM SUPAEMPR WHERE AEMPR_TIPO = 'R' {codigo} {cnpj_cpf}"
     consulta = conn.cursor().execute(query)
     teste = cursor_para_lista_dict(consulta)
@@ -705,7 +705,7 @@ def atualiza_tabela4(conn, mongo_client):
 
 
 def atualiza_tabela4_local():
-    conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     tabela_preco = conn.cursor().execute(Query.tabela4())
     catalogo = [{"empresa": item.EMP, "codigo": str(item.ITEM).strip(), "valor": float(item.VALOR),"tabela": item.TABELA} for item in tabela_preco]
     conn.close()
@@ -716,7 +716,7 @@ class Exportar:
     def relatoriodecompras(self):
         conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
         mongo_client = pymongo.MongoClient(conn)
-        conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+        conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         consultas = None
         historico_mem = None
         for query in Query.relatoriodecompras():
@@ -792,7 +792,7 @@ class Exportar:
         file.write("Latitude;Longitude;Address;ST;Name;Codigo;Rota\n")
         respostas = []
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         listaClientes = clientes()
         conn.close()
         numero_de_clientes = len(listaClientes)
@@ -832,7 +832,7 @@ class Exportar:
         file.write("Address;ST;Name;Codigo;Rota\n")
         respostas = []
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         listaClientes = clientes()
         conn.close()
         numero_de_clientes = len(listaClientes)
@@ -860,7 +860,7 @@ class Exportar:
         file.write("Latitude;Longitude;Address;ST;Name;Codigo;Rota\n")
         respostas = []
         conn = pyodbc.connect(
-            Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
         listaClientes = clientes(clientes=codigo)
         conn.close()
         numero_de_clientes = len(listaClientes)

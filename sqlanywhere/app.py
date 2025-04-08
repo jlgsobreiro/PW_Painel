@@ -1,4 +1,4 @@
-import ast
+# import ast
 from datetime import datetime, timedelta
 
 import flask.json as json
@@ -22,6 +22,7 @@ from user import Usuario
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.config["SECRET_KEY"] = "sua_chave_secreta_segura"
 Session(app)
 CORS(app)
 login_manager = LoginManager()
@@ -123,12 +124,12 @@ def home():
     erro = False
     if request.method == 'POST':
         codigo = request.form.get("codigo")
-        codigo = '0' * (5 - len(codigo)) + codigo
-        cnpj_cpf = request.form.get("cnpj_cpf")
+        codigo = codigo.zfill(5)
         lembrar = request.form.get("lembrar")
-        usuario = Usuario(codigo=codigo, cnpj_cpf=cnpj_cpf)
+        usuario = Usuario(codigo=codigo)
+        print(usuario.info)
         if usuario.info:
-            login_user(usuario, lembrar)
+            login_user(usuario, True)
             return redirect(url_for("perfil"))
         else:
             erro = True
@@ -137,7 +138,7 @@ def home():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return Usuario(codigo=None, cnpj_cpf=user_id)
+    return Usuario(codigo=user_id)
 
 
 @app.route('/perfil', methods=["GET", "POST"])
@@ -198,7 +199,7 @@ def clientes():
 
 @app.route('/tabela_preco', methods=["GET", "POST"])
 def tabela_preco():
-    return json.jsonify(Prowater.tabelaprecos())
+    return json.jsonify(prowater.tabelaprecos())
 
 
 @app.route('/tabela_preco_final', methods=["GET", "POST"])
@@ -300,7 +301,7 @@ def painel():
         tabela_base = mongo_client.get_database("prowater").get_collection("tabela_precos").find()
         lista_tabela_preco = list(tabela_base)
         if len(lista_tabela_preco) == 0:
-            conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+            conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
             Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
         return lista_tabela_preco
 
@@ -433,7 +434,7 @@ def admin():
     conn_mg = ("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&"
                "directConnection=true&ssl=false")
     #mongo_client = pymongo.MongoClient(conn_mg)
-    #conn = pyodbc.connect(Dsn="PW64", uid="BYTEC", pwd="BYTEC")
+    #conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
     #Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
     return render_template("admin.html", tittle="Admin")
 
