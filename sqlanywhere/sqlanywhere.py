@@ -628,8 +628,8 @@ def relatorio_de_compras_local(repre, cli, cnpj_cpf, top):
 
 def relatorio_cliente(**kwargs):
     query = {}
-    if kwargs.get('repre') != '00000':
-        query['supervisores'] = kwargs.get('repre')
+    # if kwargs.get('repre') != '00000':
+    #     query['supervisores'] = kwargs.get('repre')
     if kwargs.get('cli') != '00000':
         query['cliente'] = kwargs.get('cli')
     if kwargs.get('cnpj_cpf'):

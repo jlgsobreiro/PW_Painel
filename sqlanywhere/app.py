@@ -281,14 +281,16 @@ def historico_cliente():
     representante = request.form['representante']
     cnpj_cpf = request.form['cnpj_cpf']
     cliente = '0' * (5 - len(cliente)) + cliente
-    representante = '0' * (5 - len(representante)) + representante
+    representante = representante.zfill(5)
     conn = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false"
     mongo_client = pymongo.MongoClient(conn)
     repr = mongo_client.get_database("prowater") \
         .get_collection("representantes") \
-        .find({"AEMPR_CODIGO": representante}, {"AEMPR_REPR": 1, "_id": 0}).__getitem__(0).get('AEMPR_REPR')
-    representante = representante if repr != '00001' else repr
+        .find({"AEMPR_CODIGO": representante}, {"AEMPR_REPR": 1, "AEMPR_NOME_ABREV": 1, "_id": 0}).__getitem__(0)
+    representante = representante if repr.get("AEMPR_REPR") != '00001' else repr
     res = Prowater.relatorio_cliente(cli=cliente, repre=representante, cnpj_cpf=cnpj_cpf, top=6)
+    res['representante_nome'] = repr.get('AEMPR_NOME_ABREV')
+    res['representante'] = repr.get('AEMPR_REPR')
     return json.jsonify(res)
 
 
@@ -300,67 +302,69 @@ def painel():
         mongo_client = pymongo.MongoClient(conn_mg)
         tabela_base = mongo_client.get_database("prowater").get_collection("tabela_precos").find()
         lista_tabela_preco = list(tabela_base)
+        print(lista_tabela_preco)
         if len(lista_tabela_preco) == 0:
             conn = pyodbc.connect(Dsn="PW_CLOUD", uid="BYTEC", pwd="BYTEC")
             Prowater.atualiza_tabela4(conn=conn, mongo_client=mongo_client)
         return lista_tabela_preco
 
     tabela = tabelaprecos()
+    tabela_valor = {tabela[i]['codigo']: tabela[i]['valor'] for i in range(len(tabela))}
     return render_template("painel.html", title="Painel", cli=request.args.get('cli'), repre=request.args.get('repre'),
                            produtos=[
                                {"id": 1, "descricao": "CT-1",
-                                "valor": [item for item in tabela if item['codigo'] == '011009'][0]['valor'],
+                                "valor": tabela_valor.get('011009'),
                                 "codigo": '011009'},
                                {"id": 2, "descricao": "CT-2",
-                                "valor": [item for item in tabela if item['codigo'] == '011001'][0]['valor'],
+                                "valor": tabela_valor.get('011001'),
                                 "codigo": '011001'},
                                {"id": 3, "descricao": "CT-5",
-                                "valor": [item for item in tabela if item['codigo'] == '011005'][0]['valor'],
+                                "valor": tabela_valor.get('011005'),
                                 "codigo": '011005'},
                                {"id": 4, "descricao": "CB-1",
-                                "valor": [item for item in tabela if item['codigo'] == '012010'][0]['valor'],
+                                "valor": tabela_valor.get('012010'),
                                 "codigo": '012010'},
                                {"id": 5, "descricao": "CB-2",
-                                "valor": [item for item in tabela if item['codigo'] == '012003'][0]['valor'],
+                                "valor": tabela_valor.get('012003'),
                                 "codigo": '012003'},
                                {"id": 6, "descricao": "AT-1",
-                                "valor": [item for item in tabela if item['codigo'] == '021002'][0]['valor'],
+                                "valor": tabela_valor.get('021002'),
                                 "codigo": '021002'},
                                {"id": 7, "descricao": "AT-2",
-                                "valor": [item for item in tabela if item['codigo'] == '021006'][0]['valor'],
+                                "valor": tabela_valor.get('021006'),
                                 "codigo": '021006'},
                                {"id": 8, "descricao": "AT-5",
-                                "valor": [item for item in tabela if item['codigo'] == '021007'][0]['valor'],
+                                "valor": tabela_valor.get('021007'),
                                 "codigo": '021007'},
                                {"id": 9, "descricao": "AB-1",
-                                "valor": [item for item in tabela if item['codigo'] == '022004'][0]['valor'],
+                                "valor": tabela_valor.get('022004'),
                                 "codigo": '022004'},
                                {"id": 10, "descricao": "AB-2",
-                                "valor": [item for item in tabela if item['codigo'] == '022008'][0]['valor'],
+                                "valor": tabela_valor.get('022008'),
                                 "codigo": '022008'},
                                {"id": 11, "descricao": "ESP-1",
-                                "valor": [item for item in tabela if item['codigo'] == '031011'][0]['valor'],
+                                "valor": tabela_valor.get('031011'),
                                 "codigo": '031011'},
                                {"id": 12, "descricao": "ESP-3",
-                                "valor": [item for item in tabela if item['codigo'] == '031014'][0]['valor'],
+                                "valor": tabela_valor.get('031014'),
                                 "codigo": '031014'},
                                {"id": 13, "descricao": "ESP-DISP",
-                                "valor": [item for item in tabela if item['codigo'] == '031013'][0]['valor'],
+                                "valor": tabela_valor.get('031013'),
                                 "codigo": '031013'},
                                {"id": 14, "descricao": "SENS",
-                                "valor": [item for item in tabela if item['codigo'] == '041017'][0]['valor'],
+                                "valor": tabela_valor.get('041017'),
                                 "codigo": '041017'},
                                {"id": 15, "descricao": "LAMO",
-                                "valor": [item for item in tabela if item['codigo'] == '042020'][0]['valor'],
+                                "valor": tabela_valor.get('042020'),
                                 "codigo": '042020'},
                                {"id": 16, "descricao": "AFEC",
-                                "valor": [item for item in tabela if item['codigo'] == '043018'][0]['valor'],
+                                "valor": tabela_valor.get('043018'),
                                 "codigo": '043018'},
                                {"id": 17, "descricao": "SD-400G",
-                                "valor": [item for item in tabela if item['codigo'] == '051021'][0]['valor'],
+                                "valor": tabela_valor.get('051021'),
                                 "codigo": '051021'},
                                {"id": 18, "descricao": "SD-1KG",
-                                "valor": [item for item in tabela if item['codigo'] == '051022'][0]['valor'],
+                                "valor": tabela_valor.get('051022'),
                                 "codigo": '051022'}
                            ])
 

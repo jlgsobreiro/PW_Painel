@@ -238,7 +238,7 @@ def supervisores(repre):
 
 def relatoriodecomprasleve(**kwargs):
     cli = f" AND b.CODIGO = {kwargs.get('cliente')}" if kwargs.get('cliente') is not None else ''
-    repre = f" AND b.REPRE = {kwargs.get('repre')}" if kwargs.get("repre") is not None else ""
+    # repre = f" AND b.REPRE = {kwargs.get('repre')}" if kwargs.get("repre") is not None else ""
     cnpj_cpf = f" AND CNPJ_CPF = {kwargs.get('cnpj_cpf')}" if kwargs.get("cnpj_cpf") is not None else ""
     return ([
         f"SELECT cast(max(ANFCD_DATA_CAD) as DATETIME) as DT INTO #ultimo_pedido FROM VNDANFCD,VNDANFLN where ANFCD_NUM_NOTA = ANFLN_NUM_NOTA AND ANFCD_EMPRESA = ANFLN_EMPRESA AND (ANFCD_STS_NFE != 'C' OR ANFCD_STS_NFE != 'D') AND ANFCD_TIPO_OPER = 'NF1' AND ANFCD_CLIENTE = {kwargs.get('cliente')}",
