@@ -45,6 +45,9 @@ let ultimo_cliete = '';
 function onload_tabela(produtos){
   "use strict";
   items = produtos;
+  items.forEach(item => {
+      item.original_valor = item.valor;
+  })
 }
 
  function handler(componente,id){
@@ -72,26 +75,26 @@ function onload_tabela(produtos){
   $("#desconto-"+id).text("%"+(desc).toFixed(2));
  }
 
-function descontoCaixas (caixas) {
-  "use strict";
-  if (caixas <= 40){
-    return 1.0;
-  } else if (caixas <= 60){
-    return 0.95;
-  } else if (caixas <= 80){
-    return 0.935;
-  } else if (caixas <= 100){
-    return 0.92;
-  } else if (caixas <= 200){
-    return 0.9;
-  } else if (caixas <= 400){
-    return 0.88;
-  } else if (caixas > 400){
-    return 0.85;
-  } else {
-    return 1;
-  }
-}
+// function descontoCaixas (caixas) {
+//   "use strict";
+//   if (caixas <= 40){
+//     return 1.0;
+//   } else if (caixas <= 60){
+//     return 0.95;
+//   } else if (caixas <= 80){
+//     return 0.935;
+//   } else if (caixas <= 100){
+//     return 0.92;
+//   } else if (caixas <= 200){
+//     return 0.9;
+//   } else if (caixas <= 400){
+//     return 0.88;
+//   } else if (caixas > 400){
+//     return 0.85;
+//   } else {
+//     return 1;
+//   }
+// }
 
  function total_pedido() {
   "use strict";
@@ -110,17 +113,20 @@ function descontoCaixas (caixas) {
    let desconto_ped_real = parseFloat(x/tot_tabela);
    desconto_ped = isNaN(parseFloat(x/tot_tabela_cli)) ? desconto_ped_real : parseFloat(x/tot_tabela_cli);
    total_ped = x.toFixed(2);
-   desconto_max = parseFloat(descontoCaixas(tot_qtd));
+   // desconto_max = parseFloat(descontoCaixas(tot_qtd));
    let desconto_final = isNaN((1-desconto_ped_real)*100) ? 0 : (1-desconto_ped_real)*100;
-   if (descontoCaixas(tot_qtd) <= desconto_ped){
-     $("#total_final").text(total_ped);
-     $("#desconto_final").text("% "+ desconto_final.toFixed(2));
-     habilita_resumo();
-   } else {
-     $('#modal').addClass("disabled");
-     $("#total_final").text("Desconto Maximo excedido");
-     $("#desconto_final").text("% "+ desconto_final.toFixed(2));
-   }
+    $("#total_final").text(total_ped);
+    $("#desconto_final").text("% "+ desconto_final.toFixed(2));
+    habilita_resumo();
+   // if (descontoCaixas(tot_qtd) <= desconto_ped){
+   //   $("#total_final").text(total_ped);
+   //   $("#desconto_final").text("% "+ desconto_final.toFixed(2));
+   //   habilita_resumo();
+   // } else {
+   //   $('#modal').addClass("disabled");
+   //   $("#total_final").text("Desconto Maximo excedido");
+   //   $("#desconto_final").text("% "+ desconto_final.toFixed(2));
+   // }
  }
 
  function habilita_resumo(){
@@ -219,17 +225,23 @@ function handler_cliente() {
 
  function handle_tabela(tabela) {
   "use strict";
-  for (let i = 0; i < items.length; i++) {
-    let achado;
-    if (tabela){
-     let achado = tabela.find(elem => elem.ITEM === items[i].codigo);
+  items.forEach(item => {
+    let posicao = items.findIndex(elem => elem.codigo === item.codigo)+1;
+    let input_un = $("#unidade-"+posicao);
+    let label_un = $("#unidade-"+posicao+"-label");
+      if (tabela) {
+        let achado = tabela.find(elem => elem.ITEM === item.codigo);
+        if (achado) {
+          item.valor = achado.VALOR;
+          input_un.val(achado.VALOR);
+          label_un.html("Valor un | Tabela: R$"+achado.VALOR);
+          return;
+        }
     }
-    if (achado !== undefined){
-      items[i].tabela = achado.VALOR;
-    } else {
-      items[i].tabela = items[i].valor;
-    }
-  }
+    item.valor = item.original_valor;
+    input_un.val(item.original_valor);
+    label_un.html("Valor un | Tabela: R$"+item.original_valor);
+  });
  }
 
  function handle_historico(historico) {
